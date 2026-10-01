@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm install --no-audit --no-fund --legacy-peer-deps
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Unit tests (motor crítico)
+        run: npx jest --ci --silent
+      - name: Bundle export (validação de build)
+        run: npx expo export --platform android --output-dir dist-ci
+      - name: Dependency audit (informativo)
+        run: npm audit --omit=dev || true
+
+  security-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Secret scan simples (PIX/API keys hardcoded)
+        run: |
+          if grep -rInE "(sk-or-v1-[A-Za-z0-9]{20,}|EXPO_PUBLIC_DONATION_PIX_KEY=\\S+@[a-z]|pixkey\\s*=\\s*['\"][0-9]{11})" src app docs README.md 2>/dev/null; then
+            echo "::error::Possível secret hardcoded encontrado"; exit 1
+          else
+            echo "OK: nenhum secret hardcoded"
+          fi

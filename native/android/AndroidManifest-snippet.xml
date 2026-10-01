@@ -1,0 +1,16 @@
+<!--
+  Snippet de referência — integrar ao android/app/src/main/AndroidManifest.xml no prebuild
+  (fase "development build", ver ROADMAP.md M2).
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application>
+    <service
+      android:name="br.antispam.app.screening.AntiSpamCallScreeningService"
+      android:permission="android.permission.BIND_SCREENING_SERVICE"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.telecom.CallScreeningService" />
+      </intent-filter>
+    </service>
+  </application>
+</manifest>
