@@ -235,7 +235,11 @@ fun SettingsScreen(container: AppContainer, modifier: Modifier) {
             )
         }
         Section("Números ocultos") {
-            ActionChooser(settings.engine.hiddenAction) { scope.launch { container.settings.setHiddenAction(it) } }
+            Text(
+                "O Android não envia ligações de número oculto para apps de triagem. " +
+                    "Para bloqueá-las, use a opção de bloquear desconhecidos/ocultos do app Telefone.",
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
         Section("Chamadas internacionais") {
             ActionChooser(settings.engine.internationalAction) { scope.launch { container.settings.setInternationalAction(it) } }
