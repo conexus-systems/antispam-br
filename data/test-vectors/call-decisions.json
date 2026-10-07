@@ -1,0 +1,397 @@
+{
+  "description": "Vetores normativos do pipeline de decisão (ADR 0005). Reputação = dataset em datasets/v2. Toda implementação nativa deve passar em todos.",
+  "version": 1,
+  "dataset_dir": "datasets/v2",
+  "defaults": {
+    "mode": "BALANCED",
+    "user_ddd": "11",
+    "hidden_action": null,
+    "international_action": null,
+    "in_contacts": false,
+    "verification": "NOT_VERIFIED",
+    "rules": [],
+    "local_reports": []
+  },
+  "cases": [
+    {
+      "name": "golpe de banco publicado com evidência forte bloqueia",
+      "number": "+5511900000001",
+      "expect": {
+        "action": "BLOCK",
+        "stage": "REPUTATION"
+      }
+    },
+    {
+      "name": "robocall 64 silencia (abaixo do limiar de bloqueio)",
+      "number": "+5511900000003",
+      "expect": {
+        "action": "SILENCE",
+        "stage": "REPUTATION"
+      }
+    },
+    {
+      "name": "falso suporte 88 bloqueia",
+      "number": "(11) 90000-0004",
+      "expect": {
+        "action": "BLOCK",
+        "stage": "REPUTATION"
+      }
+    },
+    {
+      "name": "organização verificada é limitada a WARN",
+      "number": "+551133330000",
+      "expect": {
+        "action": "WARN",
+        "stage": "REPUTATION"
+      }
+    },
+    {
+      "name": "número contestado é limitado a WARN",
+      "number": "+5521933334444",
+      "expect": {
+        "action": "WARN",
+        "stage": "REPUTATION"
+      }
+    },
+    {
+      "name": "0303 no dataset com score 70 não tem evidência forte: silencia, não bloqueia",
+      "number": "0303 123 4567",
+      "expect": {
+        "action": "SILENCE",
+        "stage": "REPUTATION"
+      }
+    },
+    {
+      "name": "0303 desconhecido só avisa",
+      "number": "0303 999 0000",
+      "expect": {
+        "action": "WARN",
+        "stage": "HEURISTICS"
+      }
+    },
+    {
+      "name": "emergência nunca é bloqueada, mesmo com regra",
+      "number": "190",
+      "rules": [
+        {
+          "type": "REGEX",
+          "pattern": ".*",
+          "action": "BLOCK"
+        }
+      ],
+      "expect": {
+        "action": "ALLOW",
+        "stage": "EMERGENCY"
+      }
+    },
+    {
+      "name": "contato sempre passa",
+      "number": "+5511900000001",
+      "in_contacts": true,
+      "expect": {
+        "action": "ALLOW",
+        "stage": "CONTACT"
+      }
+    },
+    {
+      "name": "allowlist vence reputação",
+      "number": "+5511900000001",
+      "rules": [
+        {
+          "type": "EXACT",
+          "pattern": "+5511900000001",
+          "action": "ALLOW"
+        }
+      ],
+      "expect": {
+        "action": "ALLOW",
+        "stage": "ALLOWLIST"
+      }
+    },
+    {
+      "name": "allowlist vence regra de bloqueio por prefixo",
+      "number": "+5511987654321",
+      "rules": [
+        {
+          "type": "PREFIX",
+          "pattern": "+5511987",
+          "action": "BLOCK"
+        },
+        {
+          "type": "EXACT",
+          "pattern": "11 98765-4321",
+          "action": "ALLOW"
+        }
+      ],
+      "expect": {
+        "action": "ALLOW",
+        "stage": "ALLOWLIST"
+      }
+    },
+    {
+      "name": "regra de prefixo do usuário bloqueia",
+      "number": "+5511987654321",
+      "rules": [
+        {
+          "type": "PREFIX",
+          "pattern": "+551198765",
+          "action": "BLOCK"
+        }
+      ],
+      "expect": {
+        "action": "BLOCK",
+        "stage": "USER_RULE"
+      }
+    },
+    {
+      "name": "regra de prefixo nacional 0303 do usuário bloqueia",
+      "number": "0303 999 0000",
+      "rules": [
+        {
+          "type": "PREFIX",
+          "pattern": "0303",
+          "action": "BLOCK"
+        }
+      ],
+      "expect": {
+        "action": "BLOCK",
+        "stage": "USER_RULE"
+      }
+    },
+    {
+      "name": "regex do usuário silencia",
+      "number": "+5511912340000",
+      "rules": [
+        {
+          "type": "REGEX",
+          "pattern": "\\+55119123.*",
+          "action": "SILENCE"
+        }
+      ],
+      "expect": {
+        "action": "SILENCE",
+        "stage": "USER_RULE"
+      }
+    },
+    {
+      "name": "número oculto sem política: só sinal fraco",
+      "number": "",
+      "expect": {
+        "action": "ALLOW",
+        "stage": "HEURISTICS"
+      }
+    },
+    {
+      "name": "número oculto com política de bloqueio",
+      "number": "anonymous",
+      "hidden_action": "BLOCK",
+      "expect": {
+        "action": "BLOCK",
+        "stage": "USER_POLICY"
+      }
+    },
+    {
+      "name": "internacional com política de silêncio",
+      "number": "+1 202 555 0123",
+      "international_action": "SILENCE",
+      "expect": {
+        "action": "SILENCE",
+        "stage": "USER_POLICY"
+      }
+    },
+    {
+      "name": "internacional sem política: só sinal fraco",
+      "number": "+1 202 555 0123",
+      "expect": {
+        "action": "ALLOW",
+        "stage": "HEURISTICS"
+      }
+    },
+    {
+      "name": "STIR/SHAKEN falhou avisa, mas não bloqueia sozinho",
+      "number": "+5511987650000",
+      "verification": "FAILED",
+      "expect": {
+        "action": "WARN",
+        "stage": "HEURISTICS"
+      }
+    },
+    {
+      "name": "número desconhecido limpo passa",
+      "number": "+5511912345678",
+      "expect": {
+        "action": "ALLOW",
+        "stage": "DEFAULT",
+        "max_score": 0
+      }
+    },
+    {
+      "name": "formato inválido é suspeito mas passa",
+      "number": "+55 20 98765 4321",
+      "expect": {
+        "action": "ALLOW",
+        "stage": "HEURISTICS"
+      }
+    },
+    {
+      "name": "denúncia própria de golpe bloqueia",
+      "number": "+5511955556666",
+      "local_reports": [
+        {
+          "number": "+5511955556666",
+          "category": "BANK_SCAM"
+        }
+      ],
+      "expect": {
+        "action": "BLOCK",
+        "stage": "USER_REPORT"
+      }
+    },
+    {
+      "name": "o próprio usuário marcou como legítimo: passa",
+      "number": "+5511900000003",
+      "local_reports": [
+        {
+          "number": "+5511900000003",
+          "category": "LEGITIMATE"
+        }
+      ],
+      "expect": {
+        "action": "ALLOW",
+        "stage": "USER_REPORT"
+      }
+    },
+    {
+      "name": "modo agressivo bloqueia 0303 com score 70 publicado",
+      "number": "+553031234567",
+      "mode": "AGGRESSIVE",
+      "expect": {
+        "action": "BLOCK",
+        "stage": "REPUTATION"
+      }
+    },
+    {
+      "name": "modo conservador só silencia score 88",
+      "number": "+5511900000004",
+      "mode": "CONSERVATIVE",
+      "expect": {
+        "action": "SILENCE",
+        "stage": "REPUTATION"
+      }
+    },
+    {
+      "name": "número local sem DDD usa DDD do usuário",
+      "number": "90000-0001",
+      "user_ddd": "11",
+      "expect": {
+        "action": "BLOCK",
+        "stage": "REPUTATION"
+      }
+    },
+    {
+      "name": "emergência com +, 0 ou 55 também nunca é bloqueada por regra .*",
+      "number": "+190",
+      "rules": [
+        {
+          "type": "REGEX",
+          "pattern": ".*",
+          "action": "BLOCK"
+        }
+      ],
+      "expect": {
+        "action": "ALLOW",
+        "stage": "EMERGENCY"
+      }
+    },
+    {
+      "name": "emergência 0190 nunca é bloqueada por prefixo",
+      "number": "0190",
+      "rules": [
+        {
+          "type": "PREFIX",
+          "pattern": "01",
+          "action": "BLOCK"
+        }
+      ],
+      "expect": {
+        "action": "ALLOW",
+        "stage": "EMERGENCY"
+      }
+    },
+    {
+      "name": "emergência +55 190 nunca é bloqueada por prefixo 19",
+      "number": "+55 190",
+      "rules": [
+        {
+          "type": "PREFIX",
+          "pattern": "19",
+          "action": "BLOCK"
+        }
+      ],
+      "expect": {
+        "action": "ALLOW",
+        "stage": "EMERGENCY"
+      }
+    },
+    {
+      "name": "prefixo 55 é o DDD de Santa Maria, não o Brasil inteiro",
+      "number": "+5511987654321",
+      "rules": [
+        {
+          "type": "PREFIX",
+          "pattern": "55",
+          "action": "BLOCK"
+        }
+      ],
+      "expect": {
+        "action": "ALLOW",
+        "stage": "DEFAULT"
+      }
+    },
+    {
+      "name": "prefixo 55 bloqueia números do DDD 55",
+      "number": "+5555991234567",
+      "rules": [
+        {
+          "type": "PREFIX",
+          "pattern": "55",
+          "action": "BLOCK"
+        }
+      ],
+      "expect": {
+        "action": "BLOCK",
+        "stage": "USER_RULE"
+      }
+    },
+    {
+      "name": "regex ^55 não casa o código do país",
+      "number": "+5511987654321",
+      "rules": [
+        {
+          "type": "REGEX",
+          "pattern": "55.*",
+          "action": "BLOCK"
+        }
+      ],
+      "expect": {
+        "action": "ALLOW",
+        "stage": "DEFAULT"
+      }
+    },
+    {
+      "name": "prefixo internacional exige +",
+      "number": "+447700900123",
+      "rules": [
+        {
+          "type": "PREFIX",
+          "pattern": "+44",
+          "action": "WARN"
+        }
+      ],
+      "expect": {
+        "action": "WARN",
+        "stage": "USER_RULE"
+      }
+    }
+  ]
+}

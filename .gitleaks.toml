@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Chave Ed25519 de TESTE, pública por design; builds release recusam key_id test-*"
+paths = ['''^data/test-vectors/datasets/TEST_KEY\.json$''']

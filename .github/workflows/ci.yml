@@ -5,8 +5,16 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  check:
+  packages:
+    name: Pacotes TS (normalizador, datasets)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,18 +23,53 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: package-lock.json
-      - name: Install
-        run: npm install --no-audit --no-fund --legacy-peer-deps
+      - run: npm ci --no-audit --no-fund
       - name: Typecheck
-        run: npx tsc --noEmit
-      - name: Unit tests (motor crítico)
-        run: npx jest --ci --silent
-      - name: Bundle export (validação de build)
-        run: npx expo export --platform android --output-dir dist-ci
-      - name: Dependency audit (informativo)
-        run: npm audit --omit=dev || true
+        run: npm run typecheck
+      - name: Testes (vetores compartilhados)
+        run: npm test
+      - name: Vetores de dataset reproduzíveis
+        run: npm run vectors:check
+
+  android:
+    name: Android (engine, lint, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Engine — testes JVM (vetores + instalador + desempenho)
+        run: ./gradlew --no-daemon :engine:test
+      - name: Lint
+        run: ./gradlew --no-daemon :app:lintDebug
+      - name: Build debug + release (R8)
+        run: ./gradlew --no-daemon :app:assembleDebug :app:assembleRelease
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-reports
+          path: |
+            apps/android/engine/build/reports/tests
+            apps/android/app/build/reports/lint-results-debug.html
+
+  ios:
+    name: iOS (validação de sintaxe Swift)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: swiftc -parse
+        run: |
+          swiftc --version
+          find apps/ios -name '*.swift' -print0 | xargs -0 -r swiftc -parse
 
   backend:
+    name: API comunitária
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -38,99 +81,103 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: services/api/package-lock.json
-      - name: Install
-        run: npm install --no-audit --no-fund
-      - name: Typecheck
-        run: npx tsc --noEmit
-      - name: Unit + HTTP tests (reputation, anti-abuse, Ed25519)
-        run: npm test
+      - run: npm ci --no-audit --no-fund
+      - run: npx tsc --noEmit
+      - run: npm test
 
-  security-secrets:
+  legacy-expo:
+    name: Protótipo Expo (congelado)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/legacy-expo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/legacy-expo/package-lock.json
+      - run: npm install --no-audit --no-fund --legacy-peer-deps
+      - run: npx tsc --noEmit
+      - run: npx jest --ci --silent
+
+  data:
+    name: Dados e regras
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: JSON válido + regras perigosas
+        run: |
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+            const walk = (d) => fs.readdirSync(d, { withFileTypes: true })
+              .flatMap((e) => e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]);
+            for (const f of walk('data').filter((f) => f.endsWith('.json'))) JSON.parse(fs.readFileSync(f, 'utf8'));
+            for (const f of fs.readdirSync('data/rules').filter((f) => f.endsWith('.json'))) {
+              const r = JSON.parse(fs.readFileSync('data/rules/' + f, 'utf8'));
+              for (const rule of r.rules || []) {
+                if (rule.match && rule.match.emergency && rule.suggested_action !== 'ALLOW') {
+                  console.error('REGRA PERIGOSA:', f, rule.id); process.exit(1);
+                }
+                if (rule.suggested_action === 'BLOCK' && rule.match && rule.match.prefix && rule.match.prefix.length < 6) {
+                  console.error('BLOCK por prefixo curto é proibido:', f, rule.id); process.exit(1);
+                }
+              }
+            }
+            console.log('OK: data/ validado');
+          "
+
+  security:
+    name: Secrets, dependências e licenças
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Secret scan simples (PIX/API keys hardcoded)
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Nenhuma chave privada de dataset versionada (exceto a chave de TESTE)
         run: |
-          if grep -rInE "(sk-or-v1-[A-Za-z0-9]{20,}|EXPO_PUBLIC_DONATION_PIX_KEY=\\S+@[a-z]|pixkey\\s*=\\s*['\"][0-9]{11})" src app docs README.md 2>/dev/null; then
-            echo "::error::Possível secret hardcoded encontrado"; exit 1
-          else
-            echo "OK: nenhum secret hardcoded"
+          if git ls-files | grep -vE '^data/test-vectors/datasets/TEST_KEY.json$' | xargs grep -lE '"(private_key|secret_key)"' 2>/dev/null; then
+            echo "::error::chave privada versionada"; exit 1
           fi
-
-  licenses:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - name: Install
-        run: npm install --no-audit --no-fund --legacy-peer-deps
-      - name: License scan (bloqueia GPL/AGPL no app)
+      - name: Licenças (bloqueia GPL/AGPL/LGPL em dependências de produção)
         run: |
-          npx --yes license-checker --production --json > licenses.json
-          node -e "
-            const l = require('./licenses.json');
-            const banned = /(GPL|AGPL|LGPL)/i;
-            const bad = Object.entries(l).filter(([p, v]) => banned.test(v.licenses || ''));
-            if (bad.length) {
-              console.error('Dependências com licença copyleft detectadas:');
-              bad.forEach(([p, v]) => console.error('-', p, v.licenses));
-              process.exit(1);
-            }
-            console.log('OK: nenhuma licença copyleft em produção');
-          "
+          set -e
+          for dir in services/api; do
+            (cd "$dir" && npm ci --no-audit --no-fund >/dev/null && npx --yes license-checker --production --json > /tmp/lic.json)
+            node -e "
+              const l = require('/tmp/lic.json');
+              const bad = Object.entries(l).filter(([, v]) => /GPL/i.test(String(v.licenses || '')));
+              if (bad.length) { bad.forEach(([p, v]) => console.error('$dir', p, v.licenses)); process.exit(1); }
+              console.log('OK licenças: $dir');
+            "
+          done
+      - name: npm audit (produção, high+)
+        run: cd services/api && npm audit --omit=dev --audit-level=high
 
   sbom:
+    name: SBOM
     runs-on: ubuntu-latest
+    needs: [packages, backend]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - name: Install
-        run: npm install --no-audit --no-fund --legacy-peer-deps
-      - name: Generate SBOM (CycloneDX)
-        run: npx --yes @cyclonedx/cyclonedx-npm --omit-dev --output-file sbom.json
+      - run: cd services/api && npm ci --no-audit --no-fund
+      - run: cd services/api && npx --yes @cyclonedx/cyclonedx-npm --omit dev --output-file ../../sbom-api.json
       - uses: actions/upload-artifact@v4
         with:
           name: sbom
-          path: sbom.json
-
-  datasets:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Validate data/ schemas e regras
-        run: |
-          node -e "
-            const fs = require('fs');
-            // JSON válido em data/**
-            for (const dir of ['data/rules', 'data/public', 'data/schemas']) {
-              if (!fs.existsSync(dir)) continue;
-              for (const f of fs.readdirSync(dir)) {
-                if (!f.endsWith('.json')) continue;
-                JSON.parse(fs.readFileSync(dir + '/' + f, 'utf8'));
-              }
-            }
-            // regras: emergência nunca pode ter suggested_action != ALLOW
-            for (const f of fs.readdirSync('data/rules')) {
-              if (!f.endsWith('.json')) continue;
-              const r = JSON.parse(fs.readFileSync('data/rules/' + f, 'utf8'));
-              for (const rule of r.rules || []) {
-                if (rule.match && rule.match.emergency && rule.suggested_action !== 'ALLOW') {
-                  console.error('REGRA PERIGOSA:', f, rule.id);
-                  process.exit(1);
-                }
-                if (rule.hard && rule.suggested_action === 'BLOCK') {
-                  console.error('Regra hard com BLOCK não é permitida:', f, rule.id);
-                  process.exit(1);
-                }
-              }
-            }
-            console.log('OK: data/ validado (JSON parse + regras de emergência)');
-          "
+          path: sbom-api.json

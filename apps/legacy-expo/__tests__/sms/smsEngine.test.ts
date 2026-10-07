@@ -1,7 +1,7 @@
 import { analyzeSms, SMS_THRESHOLDS } from '../../src/core/sms/smsEngine';
 import { extractUrls, findHomoglyphs, isImpersonatedDomain } from '../../src/core/sms/urlExtractor';
 import { analyzeTextSignals, isLegitOtpSender } from '../../src/core/sms/heuristics';
-import corpus from '../../data/sms-corpus/anonymous-corpus.json';
+import corpus from '../../../../data/sms-corpus/anonymous-corpus.json';
 
 describe('urlExtractor', () => {
   it('extrai URLs simples e limpa pontuação final', () => {

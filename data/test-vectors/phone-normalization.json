@@ -1,0 +1,323 @@
+{
+  "description": "Vetores normativos de normalização BR. Toda implementação (TS, Kotlin, Swift) deve passar em todos.",
+  "version": 1,
+  "cases": [
+    {
+      "input": "+55 11 98765-4321",
+      "user_ddd": null,
+      "kind": "MOBILE",
+      "e164": "+5511987654321",
+      "shard": "55-11"
+    },
+    {
+      "input": "(11) 98765-4321",
+      "user_ddd": null,
+      "kind": "MOBILE",
+      "e164": "+5511987654321",
+      "shard": "55-11"
+    },
+    {
+      "input": "011987654321",
+      "user_ddd": null,
+      "kind": "MOBILE",
+      "e164": "+5511987654321",
+      "shard": "55-11"
+    },
+    {
+      "input": "0 21 11 98765 4321",
+      "user_ddd": null,
+      "kind": "MOBILE",
+      "e164": "+5511987654321",
+      "shard": "55-11"
+    },
+    {
+      "input": "5511987654321",
+      "user_ddd": null,
+      "kind": "MOBILE",
+      "e164": "+5511987654321",
+      "shard": "55-11"
+    },
+    {
+      "input": "1187654321",
+      "user_ddd": null,
+      "kind": "MOBILE",
+      "e164": "+5511987654321",
+      "shard": "55-11"
+    },
+    {
+      "input": "987654321",
+      "user_ddd": "21",
+      "kind": "MOBILE",
+      "e164": "+5521987654321",
+      "shard": "55-21"
+    },
+    {
+      "input": "87654321",
+      "user_ddd": "21",
+      "kind": "MOBILE",
+      "e164": "+5521987654321",
+      "shard": "55-21"
+    },
+    {
+      "input": "987654321",
+      "user_ddd": null,
+      "kind": "LOCAL_NO_DDD",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "5599998888",
+      "user_ddd": null,
+      "kind": "MOBILE",
+      "e164": "+5555999998888",
+      "shard": "55-55"
+    },
+    {
+      "input": "555599998888",
+      "user_ddd": null,
+      "kind": "MOBILE",
+      "e164": "+5555999998888",
+      "shard": "55-55"
+    },
+    {
+      "input": "1133334444",
+      "user_ddd": null,
+      "kind": "LANDLINE",
+      "e164": "+551133334444",
+      "shard": "55-11"
+    },
+    {
+      "input": "+55 (61) 3333-4444",
+      "user_ddd": null,
+      "kind": "LANDLINE",
+      "e164": "+556133334444",
+      "shard": "55-61"
+    },
+    {
+      "input": "11 6123-4567",
+      "user_ddd": null,
+      "kind": "LANDLINE",
+      "e164": "+551161234567",
+      "shard": "55-11",
+      "note": "fixo pode começar com 2 a 6 (Res. 749/2022 art. 11)"
+    },
+    {
+      "input": "0800 123 4567",
+      "user_ddd": null,
+      "kind": "TOLL_FREE",
+      "e164": "+558001234567",
+      "shard": "55-ng"
+    },
+    {
+      "input": "+55 800 123 4567",
+      "user_ddd": null,
+      "kind": "TOLL_FREE",
+      "e164": "+558001234567",
+      "shard": "55-ng"
+    },
+    {
+      "input": "0303 123 4567",
+      "user_ddd": null,
+      "kind": "TELEMARKETING",
+      "e164": "+553031234567",
+      "shard": "55-ng"
+    },
+    {
+      "input": "+55 303 123 4567",
+      "user_ddd": null,
+      "kind": "TELEMARKETING",
+      "e164": "+553031234567",
+      "shard": "55-ng"
+    },
+    {
+      "input": "0304 765 4321",
+      "user_ddd": null,
+      "kind": "INVALID",
+      "e164": null,
+      "shard": null,
+      "note": "0304 revogado em 2024 (cobrança usa 0303)"
+    },
+    {
+      "input": "0500 123 4510",
+      "user_ddd": null,
+      "kind": "DONATION",
+      "e164": "+555001234510",
+      "shard": "55-ng"
+    },
+    {
+      "input": "0300 111 2222",
+      "user_ddd": null,
+      "kind": "SHARED_COST",
+      "e164": "+553001112222",
+      "shard": "55-ng"
+    },
+    {
+      "input": "4004 1234",
+      "user_ddd": "11",
+      "kind": "NON_GEO_UNIQUE",
+      "e164": "+5540041234",
+      "shard": "55-ng"
+    },
+    {
+      "input": "+5540041234",
+      "user_ddd": null,
+      "kind": "NON_GEO_UNIQUE",
+      "e164": "+5540041234",
+      "shard": "55-ng"
+    },
+    {
+      "input": "190",
+      "user_ddd": null,
+      "kind": "EMERGENCY",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "192",
+      "user_ddd": "11",
+      "kind": "EMERGENCY",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "29102",
+      "user_ddd": null,
+      "kind": "SHORT_CODE",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "",
+      "user_ddd": null,
+      "kind": "HIDDEN",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "anonymous",
+      "user_ddd": null,
+      "kind": "HIDDEN",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "+1 202 555 0123",
+      "user_ddd": null,
+      "kind": "INTERNATIONAL",
+      "e164": "+12025550123",
+      "shard": "55-intl"
+    },
+    {
+      "input": "0021 1 202 555 0123",
+      "user_ddd": null,
+      "kind": "INTERNATIONAL",
+      "e164": "+12025550123",
+      "shard": "55-intl"
+    },
+    {
+      "input": "+55 20 98765 4321",
+      "user_ddd": null,
+      "kind": "INVALID",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "+55 11 88765 4321",
+      "user_ddd": null,
+      "kind": "INVALID",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "+55 11 1234 5678",
+      "user_ddd": null,
+      "kind": "INVALID",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "12",
+      "user_ddd": null,
+      "kind": "INVALID",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "112",
+      "user_ddd": null,
+      "kind": "EMERGENCY",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "911",
+      "user_ddd": null,
+      "kind": "EMERGENCY",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "135",
+      "user_ddd": null,
+      "kind": "EMERGENCY",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "10331",
+      "user_ddd": null,
+      "kind": "EMERGENCY",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "+190",
+      "user_ddd": null,
+      "kind": "EMERGENCY",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "+55 190",
+      "user_ddd": null,
+      "kind": "EMERGENCY",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "55190",
+      "user_ddd": "11",
+      "kind": "EMERGENCY",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "0190",
+      "user_ddd": null,
+      "kind": "EMERGENCY",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "+112",
+      "user_ddd": null,
+      "kind": "EMERGENCY",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "+911",
+      "user_ddd": null,
+      "kind": "EMERGENCY",
+      "e164": null,
+      "shard": null
+    },
+    {
+      "input": "0800",
+      "user_ddd": null,
+      "kind": "SHORT_CODE",
+      "e164": null,
+      "shard": null
+    }
+  ]
+}

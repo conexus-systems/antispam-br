@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AntiSpam BR</string>
+    <string name="channel_warn_name">Avisos de possível spam</string>
+    <string name="channel_warn_description">Aviso quando uma ligação recebida parece spam ou golpe.</string>
+</resources>

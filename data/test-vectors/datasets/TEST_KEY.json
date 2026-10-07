@@ -1,0 +1,6 @@
+{
+  "warning": "CHAVE DE TESTE PÚBLICA. Builds release DEVEM rejeitar key_id test-*.",
+  "key_id": "test-2026",
+  "public_key_b64": "1rV82sDPWKuUMz6sgo3zzyN1S8r4frG82FsRek1J258=",
+  "seed_b64": "Iu3mwhBx12By6QXQRiB9GCfcpQ5L5anosX9snSGa2U0="
+}

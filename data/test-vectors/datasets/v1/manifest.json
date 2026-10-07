@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "dataset": "br-calls",
+  "version": 2026100600,
+  "created_at": "2026-10-07T00:00:00.000Z",
+  "expires_at": "2036-10-04T00:00:00.000Z",
+  "key_id": "test-2026",
+  "compression": "gzip",
+  "record_count": 8,
+  "publication_policy": {
+    "min_weighted_reporters": 3,
+    "min_age_hours": 48,
+    "min_score": 60
+  },
+  "shards": [
+    {
+      "id": "55-11",
+      "path": "brazil/55-11.bin.gz",
+      "version": 2026100600,
+      "sha256": "35a8ad1fb433f6c4c5030f7add96386f349a192c21b8ef314724bcd69ff30ce1",
+      "size": 81,
+      "record_count": 4
+    },
+    {
+      "id": "55-21",
+      "path": "brazil/55-21.bin.gz",
+      "version": 2026100600,
+      "sha256": "36373d61fe17648975cd179d971d32ab6659dd1ff6d26a97e169d1a1abd5276b",
+      "size": 66,
+      "record_count": 2
+    },
+    {
+      "id": "55-ng",
+      "path": "brazil/55-ng.bin.gz",
+      "version": 2026100600,
+      "sha256": "1e65e293c69a6c0cd4951aeb9f0bc6e125971f65e8009121fced9be8051ccfda",
+      "size": 67,
+      "record_count": 2
+    }
+  ],
+  "deltas": []
+}

@@ -1,83 +1,114 @@
 # ARCHITECTURE — AntiSpam BR
 
-## 1. Visão geral
+Status: M0 concluído, M1 (Android offline) em andamento. Decisões formais em [`docs/adr/`](adr/README.md).
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│                    UI (expo-router, TSX)                        │
-│  onboarding · (tabs): início/histórico/verificar/ajustes · doação │
-├────────────────────────────────────────────────────────────────┤
-│             Camada de aplicação (src/app)                       │
-│  store (estado global + AsyncStorage) · screening (ingest)      │
-│  backup (JSON validado) · nativeBridge (no-op em Expo Go)       │
-├────────────────────────────────────────────────────────────────┤
-│                    Núcleo puro (src/core) — 100% testável       │
-│  phone/ (normalize BR, emergências, 0303)                       │
-│  rules/ (motor de regras)  · decision/ (SpamDecisionEngine)     │
-│  detection/ (SpamScore, CampaignDetector)                       │
-│  reputation/ (denúncias + anti-abuse)  · database/ (spam DB)    │
-│  security/ (sha256, hash-prefix)  · donation/ (PIX EMV+CRC16)   │
-│  ai/ (OpenRouter OPCIONAL — nunca na decisão crítica)           │
-├────────────────────────────────────────────────────────────────┤
-│  Native (development build)  native/android/*.kt                │
-│  CallScreeningService → bridge → engine JS → decisão c/ timeout │
-└────────────────────────────────────────────────────────────────┘
-```
+## 1. Princípios que moldam a arquitetura
 
-## 2. Fluxo de uma chamada
-
-1. **Nativo** (`AntiSpamCallScreeningService.onScreenCall`) recebe a chamada e pede decisão à ponte (timeout 1,2 s → ALLOW).
-2. **JS** (`ingestIncomingCall`) monta `CallContext` (número, apresentação, contatos resolvidos localmente, STIR/SHAKEN).
-3. **Engine** (`decide`) executa o pipeline §4 do PRD e devolve `CallDecision` (ação, score, confiança, razões).
-4. **Histórico + notificação** registrados localmente; `notifyDecision` devolve a ação ao nativo.
-5. **Fail-safe**: exceção em qualquer camada → `ALLOW` + log local.
-
-## 3. Decisões de arquitetura
-
-| Decisão | Justificativa |
+| Princípio | Consequência técnica |
 |---|---|
-| Núcleo puro em TS sem deps RN | Testável em Node (42 testes), portável para módulo nativo futuro |
-| Store próprio (`useSyncExternalStore`) + AsyncStorage | Zero dependência de estado; suficiente p/ escala do app |
-| AsyncStorage → (futuro) SQLite | Interface `SpamDatabase` já isola storage; migração transparente |
-| IA fora do pipeline | Latência + privacidade + auditabilidade; IA só sob demanda com consentimento |
-| Hash-prefix (k-anonymity) p/ base comunitária | Nunca transmitir número cru; consultas por prefixo de SHA-256 |
-| Deltas assinados (Ed25519) | Integridade da base; rollback por versão; anti database-poisoning |
+| Decisão on-device, nunca dependente de rede | Motor nativo + dataset local mmap; rede só em background (WorkManager / BGTask) |
+| KPI = spam bloqueado **com mínimo de falsos positivos** | BLOCK exige evidência forte; heurística para em SILENCE; fail-open (ADR 0005) |
+| Comunidade nunca é verdade absoluta | Publicação com limiar ponderado, quarentena, contestação (ADR 0006, `specs/PUBLICATION_POLICY.md`) |
+| Privacidade honesta | Sem agenda, sem histórico, sem IDs de publicidade; hash de telefone **não** é tratado como anonimização (ADR 0004) |
+| Android e iOS compartilham inteligência, não código | Dados + vetores de teste normativos (ADR 0002) |
 
-## 4. Formato aberto da base (§11)
-
-```json
-{
-  "key": "+551140028922",
-  "country": "BR",
-  "category": "telemarketing",
-  "score": 78,
-  "reports": 142,
-  "uniqueReporters": 96,
-  "firstSeen": "2026-01-01T00:00:00Z",
-  "lastSeen": "2026-10-01T12:00:00Z",
-  "confidence": 0.87,
-  "falsePositives": 2
-}
-```
-
-## 5. Atualização da base (§12)
+## 2. Monorepo
 
 ```
-App start → manifest (versão N) → se N > local → baixar delta
-→ verificar assinatura + digest → merge validado → persistir → rollback se falha
+apps/
+  android/            Kotlin · Compose · Room · DataStore · WorkManager · CallScreeningService
+    engine/           motor Kotlin/JVM puro (normalizador, regras, shard reader, Ed25519, instalador, pipeline)
+    app/              app Android (UI, serviço de triagem, repositórios, updater)
+  ios/                Swift/SwiftUI + Call Directory, Message Filter, Live Caller ID (M6)
+  web/                portal comunitário estático
+  legacy-expo/        protótipo React Native congelado (ADR 0001) — removido após paridade
+services/
+  api/                API comunitária (Node 22 + TS) → PostgreSQL (M2)
+  moderation/         (M2) fila de contestação e quarentena
+  ingestion/          (M3) job de publicação de datasets assinados
+packages/
+  phone-normalizer/   normalização BR (TS) — referência dos vetores
+  datasets/           formato binário, manifest, assinatura, deltas, gerador de vetores
+  reputation/         (M2) score comunitário + anti-poisoning (hoje em services/api/src)
+  spam-engine/        (M4) motor SMS TS (hoje no legacy-expo, src/core/sms)
+  rules/              (M2) validação de data/rules
+data/
+  rules/              brazil-numbering.json (fatos verificados), regras padrão, categorias
+  schemas/            JSON Schemas (report, rule, manifest)
+  test-vectors/       vetores normativos: normalização, decisões, datasets assinados
+  sms-corpus/         corpus anonimizado (spam, golpe, banco legítimo, OTP, entrega…)
+  public/             exemplos públicos
+infra/  docker/ terraform/ kubernetes/
+docs/   adr/ specs/ research/ + documentos de M0
+agents/ papéis dos agentes (ROLE/TASKS/DECISIONS) + ORCHESTRATOR
 ```
 
-Trabalho futuro (M8): servidor estático + manifest assinado; WorkManager/expo-task p/ periodicidade (Wi-Fi apenas por padrão).
+## 3. Fluxo de uma ligação (Android)
 
-## 6. Segurança (resumo; detalhes em THREAT_MODEL.md)
+```
+Telecom ──bind──▶ AntiSpamCallScreeningService.onScreenCall
+                   │ (direção ≠ entrada → ALLOW imediato)
+                   ▼
+            ScreeningCoordinator.screen(raw, STIR)        orçamento 1,5 s · prazo do sistema 5 s
+                   │ snapshot imutável em memória: regras compiladas + ajustes + denúncias próprias
+                   ▼
+            SpamEngine.decide ─ normalize ─ emergência/1XX ─ contato ─ allowlist/regras
+                   │            ─ política do usuário (oculto/internacional) ─ denúncia própria
+                   │            ─ dataset mmap (busca binária) ─ heurísticas ─ cache comunitário ─ modelo (M7)
+                   ▼
+            Decision(action, score, stage, reasons[])
+                   ├─▶ respondToCall (ALLOW / WARN / setSilenceCall / disallow+reject, mantendo no registro)
+                   └─▶ histórico local (Room, 90 dias) + notificação de aviso
+```
 
-- Validação estrita de todo input externo (backup, deltas).
-- Sem `eval`, sem WebView, sem links externos em contexto privilegiado.
-- Chaves (PIX opcional, OpenRouter do usuário) via env/aparelho — nunca no repo.
-- Rate limit + anonimização planejados no backend comunitário (M8).
+Medido no emulador API 34: Telecom `SCREENING_BOUND → COMPLETED` em 2–4 ms; motor 0,3–1,5 ms.
+Sem `READ_CONTACTS`: o sistema não envia ligações de contatos para triagem (proteção por construção).
 
-## 7. Performance (§27)
+## 4. Distribuição da base
 
-- Lookup canônico O(1) (Map); campanha janela 10 min limitada a 50 eventos.
-- Benchmark planejado: 10k → 5M entradas (latência, RAM, startup) — M14.
-- Meta: p95 < 100 ms em aparelho intermediário; nunca aproximar do timeout do sistema.
+```
+denúncias ─▶ Postgres ─▶ reputação (job) ─▶ política de publicação ─▶ builder (packages/datasets)
+                                                                        │ shards gzip por DDD + deltas
+                                                                        │ manifest.json + .sig (Ed25519, chave offline)
+                                                                        ▼
+                                                              Object Storage + CDN (estático)
+                                                                        │
+             Android: SpamDatabaseUpdater (12 h, Wi-Fi) ─▶ DatasetInstaller (verifica tudo, staging, rename atômico)
+             iOS: BGAppRefresh ─▶ mesmo formato ─▶ Call Directory (top-N, incremental)
+```
+
+Formato: [`specs/DATASET_FORMAT.md`](specs/DATASET_FORMAT.md). Proteções: assinatura, sha256 por
+arquivo, tamanho, anti-rollback, `expires_at` anti-freeze, path allowlist, teto contra gzip bomb,
+chaves `test-*` recusadas em release.
+
+## 5. Plataformas — o que muda entre Android e iOS
+
+| Capacidade | Android | iOS |
+|---|---|---|
+| Decisão em tempo real por chamada | Sim (`CallScreeningService`) | Não — lista pré-carregada (Call Directory) ou Live Caller ID (PIR, iOS 18+) |
+| SILENCE | `setSilenceCall` | vira rótulo (WARN) |
+| Regras de prefixo/regex | Sim | Não (só números concretos) |
+| STIR/SHAKEN | `getCallerNumberVerificationStatus` (API 30+) | Não exposto |
+| SMS | Compartilhar texto / Processar texto (ADR 0008) | `ILMessageFilterExtension` local, sem deferral de rede |
+| Tamanho da base | Ilimitado na prática (mmap) | Top-N por shard, começando ≤ 200 k |
+
+Detalhes: [`ANDROID_CAPABILITIES.md`](ANDROID_CAPABILITIES.md), [`IOS_CAPABILITIES.md`](IOS_CAPABILITIES.md).
+
+## 6. Backend (M2)
+
+- API (`services/api`): `GET /v1/numbers/{hash-prefix}/reputation` (k-anonimato), `POST /v1/reports`,
+  `POST /v1/reports/{id}/vote`, `POST /v1/numbers/{number}/legitimate`, `GET /v1/datasets/manifest`,
+  `GET /v1/datasets/{version}`, `GET /v1/campaigns`.
+- PostgreSQL 16: `reports` particionada por mês; reputação materializada por número tocado;
+  rate limit em tabela `UNLOGGED`; Redis/Bloom só se a medição justificar (ADR 0007).
+- Token de dispositivo rotativo + prova de trabalho no registro; nunca conta de usuário obrigatória.
+
+## 7. Qualidade
+
+| Camada | Testes hoje |
+|---|---|
+| `packages/phone-normalizer` | 39 (vetores) |
+| `packages/datasets` | 11 (assinatura, adulteração, rollback, expiração, path traversal, delta) |
+| `apps/android/engine` | 78 (vetores compartilhados + instalador + desempenho 1 M registros) |
+| `apps/android/app` (instrumentado) | 3 (Room + coordenador em device) |
+| E2E manual em emulador | 4 ligações GSM reais com dataset servido por HTTP |

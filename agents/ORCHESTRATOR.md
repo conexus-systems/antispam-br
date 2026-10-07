@@ -7,23 +7,29 @@ Coordena os 13 agentes (`agents/*/ROLE.md`). Não implementa features diretament
 1. Quebrar epic em tarefas com critérios de aceitação testáveis.
 2. Mapear dependências e delegar ao agente dono (TASKS.md do agente).
 3. Impedir dois agentes no mesmo componente crítico (tabela de locks abaixo).
-4. Executar checks locais (tsc, jest, e2e) antes de pedir revisão.
+4. Executar checks locais (`npm test`, `./gradlew :engine:test :app:lintDebug`, instrumentados quando tocar o app) antes de pedir revisão.
 5. Enviar ao REVIEWER_AGENT — ele pode REJEITAR; rejeição volta com lista de motivos.
 6. Só integrar após aprovação + CI verde.
+7. Ao fim de cada marco: STATUS, IMPLEMENTADO, TESTES, COBERTURA, RISCOS, DÍVIDA TÉCNICA, PRÓXIMAS TAREFAS.
 
 ## Locks de componentes (exclusividade mútua)
 
 | Componente | Dono exclusivo |
 |---|---|
-| `src/core/decision/*`, `src/core/detection/*` | spam-intelligence |
-| `modules/antispam-screening`, plugins Android | android |
-| `ios/`, extensões Swift | ios |
-| `services/api`, schemas DB | backend |
-| `data/`, datasets, assinatura | data |
-| `data/rules/*.json` | brazil-telecom |
-| CI, eas.json, deploy | devops |
+| `apps/android/engine/**` (pipeline, heurísticas) | spam-intelligence (+ android para I/O) |
+| `apps/android/app/**` | android |
+| `apps/ios/**` | ios |
+| `services/api`, migrations | backend |
+| `packages/datasets`, `docs/specs/DATASET_FORMAT.md`, chaves | data |
+| `packages/phone-normalizer`, `data/rules/*.json` | brazil-telecom |
+| `data/test-vectors/**` | qa (mudança exige aprovação do dono do componente testado) |
+| `.github/workflows`, `infra/` | devops |
 | LICENSE, termos, LGPD docs | privacy |
+| `apps/legacy-expo/**` | congelado — só correções de build |
 | Aprovação final de qualquer PR | reviewer |
+
+Regra de ouro: mudança de comportamento compartilhado começa no vetor de teste; Android, iOS e
+backend só são atualizados depois que o vetor muda.
 
 ## Definitions of Done (qualquer PR)
 

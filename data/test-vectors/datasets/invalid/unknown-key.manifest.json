@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "dataset": "br-calls",
+  "version": 2026100700,
+  "created_at": "2026-10-07T00:00:00.000Z",
+  "expires_at": "2036-10-04T00:00:00.000Z",
+  "key_id": "nobody",
+  "compression": "gzip",
+  "record_count": 7,
+  "publication_policy": {
+    "min_weighted_reporters": 3,
+    "min_age_hours": 48,
+    "min_score": 60
+  },
+  "shards": [
+    {
+      "id": "55-11",
+      "path": "brazil/55-11.bin.gz",
+      "version": 2026100700,
+      "sha256": "8de663ce04b2e6a452d504e92f7b9978fbfb15a0d852dec9467adc8cee945128",
+      "size": 85,
+      "record_count": 4
+    },
+    {
+      "id": "55-21",
+      "path": "brazil/55-21.bin.gz",
+      "version": 2026100700,
+      "sha256": "2c178d337b1ce0195fb0b562038e5aee70611187ca02631029ac715812848363",
+      "size": 66,
+      "record_count": 2
+    },
+    {
+      "id": "55-ng",
+      "path": "brazil/55-ng.bin.gz",
+      "version": 2026100700,
+      "sha256": "59af2b5750cd197e8ef787bbaf82b86a4389cbdc0a2f5d19583f6208a50375ce",
+      "size": 51,
+      "record_count": 1
+    }
+  ],
+  "deltas": [
+    {
+      "shard": "55-11",
+      "from_version": 2026100600,
+      "to_version": 2026100700,
+      "path": "brazil/deltas/55-11.2026100600-2026100700.bin.gz",
+      "sha256": "19f1bf76e73d80fe1fa0ae697736cc04f9d3b42c47cf8fe4859cf748d4cf55d3",
+      "size": 75,
+      "record_count": 3
+    },
+    {
+      "shard": "55-21",
+      "from_version": 2026100600,
+      "to_version": 2026100700,
+      "path": "brazil/deltas/55-21.2026100600-2026100700.bin.gz",
+      "sha256": "a6e87e78cfa599061fb1962952fd1397a1ceb38718422e3e22f44084c626e614",
+      "size": 35,
+      "record_count": 0
+    },
+    {
+      "shard": "55-ng",
+      "from_version": 2026100600,
+      "to_version": 2026100700,
+      "path": "brazil/deltas/55-ng.2026100600-2026100700.bin.gz",
+      "sha256": "c5046b745a8118805791d26398e1d5c463a477983789c70f0da594e9f0165c62",
+      "size": 53,
+      "record_count": 1
+    }
+  ]
+}

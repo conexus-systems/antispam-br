@@ -1,0 +1,97 @@
+{
+  "description": "Gerado por packages/datasets/scripts/gen-test-vectors.ts — não editar à mão.",
+  "now": "2026-10-07T12:00:00Z",
+  "trusted_keys": {
+    "test-2026": "1rV82sDPWKuUMz6sgo3zzyN1S8r4frG82FsRek1J258="
+  },
+  "valid": [
+    {
+      "dir": "v1",
+      "installed_version": null,
+      "expect": "OK",
+      "version": 2026100600
+    },
+    {
+      "dir": "v2",
+      "installed_version": 2026100600,
+      "expect": "OK",
+      "version": 2026100700
+    },
+    {
+      "dir": "v1",
+      "installed_version": 2026100700,
+      "expect": "ROLLBACK"
+    }
+  ],
+  "invalid": [
+    {
+      "file": "invalid/tampered",
+      "expect": "BAD_SIGNATURE"
+    },
+    {
+      "file": "invalid/unknown-key",
+      "expect": "UNKNOWN_KEY"
+    },
+    {
+      "file": "invalid/expired",
+      "expect": "EXPIRED"
+    },
+    {
+      "file": "invalid/path-traversal",
+      "expect": "BAD_PATH"
+    },
+    {
+      "file": "invalid/bad-compression",
+      "expect": "UNSUPPORTED_COMPRESSION"
+    }
+  ],
+  "lookups_after_v2": [
+    {
+      "number": "5511900000001",
+      "found": true,
+      "score": 95,
+      "category": "BANK_SCAM",
+      "flags": 2
+    },
+    {
+      "number": "5511900000002",
+      "found": false
+    },
+    {
+      "number": "5511900000004",
+      "found": true,
+      "score": 88,
+      "category": "FAKE_SUPPORT",
+      "flags": 2
+    },
+    {
+      "number": "551133330000",
+      "found": true,
+      "score": 66,
+      "category": "COLLECTION",
+      "flags": 8
+    },
+    {
+      "number": "5521933334444",
+      "found": true,
+      "score": 62,
+      "category": "SILENT_CALL",
+      "flags": 4
+    },
+    {
+      "number": "558001234567",
+      "found": false
+    },
+    {
+      "number": "553031234567",
+      "found": true,
+      "score": 70,
+      "category": "TELEMARKETING",
+      "flags": 0
+    },
+    {
+      "number": "5599999999999",
+      "found": false
+    }
+  ]
+}

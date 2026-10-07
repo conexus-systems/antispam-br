@@ -2,29 +2,35 @@
   "$schema": "../schemas/rule.schema.json",
   "version": "2026-10-07",
   "country": "BR",
-  "description": "Regras iniciais BR. Emergências NUNCA aparecem aqui (hard-coded em src/core/phone/emergency.ts e intocáveis).",
+  "description": "Regras iniciais BR. Emergência e utilidade pública (1XX, 112, 911) são protegidas no motor de cada app e nunca dependem destas regras.",
   "rules": [
     {
       "id": "br-0303-telemarketing",
-      "match": { "prefix": "0303" },
+      "match": {
+        "prefix": "0303"
+      },
       "category": "TELEMARKETING",
       "suggested_action": "WARN",
-      "reason": "Prefixo regulado de telemarketing (0303) — indesejado para muitos, legítimo na origem",
+      "reason": "0303 identifica chamadores de alto volume (telemarketing, cobrança, doações); uso opcional desde 15/08/2025 — ausência do 0303 não prova legitimidade",
       "severity": 20,
       "enabled": true
     },
     {
       "id": "br-0800-neutral",
-      "match": { "prefix": "0800" },
+      "match": {
+        "prefix": "0800"
+      },
       "category": "FAKE_SUPPORT",
       "suggested_action": "WARN",
-      "reason": "0800 é usado por empresas legítimas e por golpes de falso suporte — só o score decide",
+      "reason": "Desativada: 0800 é usado por bancos e SACs legítimos; avisar todo 0800 geraria falsos positivos. Só reputação comunitária decide.",
       "severity": 10,
-      "enabled": true
+      "enabled": false
     },
     {
       "id": "br-foreign-ddi-spoof-alert",
-      "match": { "foreign_ddi": true },
+      "match": {
+        "foreign_ddi": true
+      },
       "category": "SPOOFING",
       "suggested_action": "WARN",
       "reason": "Chamada com DDI estrangeiro exibido em linha BR — padrão comum de spoofing",
@@ -33,7 +39,9 @@
     },
     {
       "id": "br-emergency-never-block",
-      "match": { "emergency": true },
+      "match": {
+        "emergency": true
+      },
       "category": "OTHER",
       "suggested_action": "ALLOW",
       "reason": "Números de emergência jamais são bloqueados (proteção hard-coded)",

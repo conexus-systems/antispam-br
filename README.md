@@ -1,99 +1,71 @@
 # AntiSpam BR 🛡️
 
-**Bloqueio inteligente de chamadas de spam — 100% open source, sem anúncios, sem cadastro, privacy-first.**
+**Bloqueio de ligações de spam, robocalls e golpes — gratuito, open source, privacy-first e feito para o Brasil.**
 
-Feito para o Brasil: entende `+55`, DDD, 9º dígito, `0800`, `0303`, `4004/3003`, emergências (que **nunca** são bloqueadas), e toma decisões **explicáveis** em **< 100 ms**, totalmente **offline**.
+- Decide **no aparelho**, sem depender de internet durante a ligação.
+- Entende `+55`, DDD, nono dígito, `0303`, `0800`, `4004`; emergência e utilidade pública (1XX, 112, 911) **nunca** são bloqueadas.
+- Toda decisão é **explicável** ("por que bloqueou?") e reversível com um toque ("Não é spam").
+- Base comunitária transparente, publicada em datasets **assinados**; uma denúncia sozinha nunca bloqueia ninguém.
+- Sem anúncios, sem conta, sem venda de dados, sem upload da agenda.
 
-> ⚠️ Nome provisório. Monetização: **nenhuma** — doação opcional via PIX (chave via env de build, nunca no código).
+> Nome provisório. Doação opcional via PIX ([DONATE.md](DONATE.md)).
 
----
+## Estado
 
-## ✨ O que já funciona (MVP)
-
-| Funcionalidade | Status |
+| Marco | Status |
 |---|---|
-| Motor de decisão local (`ALLOW / WARN / SILENCE / BLOCK`) com fail-safe | ✅ 42 testes |
-| Normalização BR (`(11) 99999-9999` ≡ `11999999999` ≡ `+5511999999999`) | ✅ |
-| SpamScore 0–100 auditável (reputação + campanha + padrão + STIR/SHAKEN + histórico) | ✅ |
-| Modos: Desativado / Básico / Equilibrado / Agressivo / Personalizado | ✅ |
-| Whitelist, blacklist, regras por prefixo/regex/ocultos/internacionais | ✅ |
-| Emergências (190, 192, 193…) e contatos: **nunca bloqueados** | ✅ |
-| Denúncias locais com anti-abuse (denunciantes únicos, recência, falso-positivos) | ✅ |
-| Detecção de campanhas (dezenas de números similares em 10 min) | ✅ |
-| Histórico explicável ("por que bloqueou?") + tempo poupado (estimativa) | ✅ |
-| Verificar número (antes de retornar ligação suspeita) | ✅ |
-| IA Assistente opcional via **OpenRouter** (off por padrão, **nunca** decide bloqueio) | ✅ |
-| Backup JSON validado (anti-payload-malicioso) | ✅ |
-| Doação PIX com BR Code gerado no aparelho (CRC16/EMV) | ✅ |
-| Simulador de chamadas (funciona no Expo Go, iOS e Android) | ✅ |
-| **CallScreeningService real (Android 10+)** — módulo Expo local, papel ROLE_CALL_SCREENING, fail-safe, timeout 1,2 s, cache | ✅ dev build/standalone |
-| APK standalone (JS embutido, sem Expo Go) instalado e validado em device | ✅ |
-| iOS (Call Directory Extension) | 🔜 ver [Roadmap](docs/ROADMAP.md) |
+| M0 — pesquisa, ADRs, arquitetura, threat model | ✅ |
+| M1 — Android nativo offline | 🟡 núcleo pronto e validado em emulador (78 testes JVM + 3 instrumentados) |
+| M2 — comunidade + API PostgreSQL | 🔜 |
+| M6 — iOS | 🔜 |
 
-## 🚀 Rodando
+Detalhes em [docs/ROADMAP.md](docs/ROADMAP.md).
+
+## Estrutura
+
+```
+apps/android/      app nativo (Kotlin, Compose, CallScreeningService) + :engine (motor puro)
+apps/ios/          extensões iOS (Message Filter hoje; Call Directory em M6)
+apps/web/          portal comunitário
+apps/legacy-expo/  protótipo React Native anterior — congelado (ADR 0001)
+packages/          phone-normalizer, datasets (formato binário assinado) — TypeScript
+services/api/      API comunitária
+data/              regras BR, schemas, vetores de teste normativos, corpus SMS anonimizado
+docs/              ARCHITECTURE, THREAT_MODEL, ROADMAP, adr/, specs/, research/
+agents/            papéis da equipe de agentes (ROLE / TASKS / DECISIONS)
+```
+
+## Rodando
+
+Requisitos: JDK 17, Android SDK (API 36), Node ≥ 22.18.
 
 ```bash
-npm install
-npx expo start          # escaneie o QR com Expo Go (iOS/Android)
+# pacotes TS e vetores compartilhados
+npm ci && npm test && npm run typecheck
+
+# Android
+cd apps/android
+./gradlew :engine:test            # motor + vetores compartilhados
+./gradlew :app:installDebug       # instala br.antispam.app.debug
+adb shell cmd role add-role-holder android.app.role.CALL_SCREENING br.antispam.app.debug
 ```
 
-- **Expo Go**: tudo funciona em **modo demonstração** — use o **Simulador de chamadas** na aba Início para ver o pipeline completo (normalização → regras → base → score → decisão → histórico → denúncia).
-- **Bloqueio real (Android)**: build standalone com o módulo nativo integrado (M2 ✅):
+O build debug baixa datasets de `http://10.0.2.2:17887/datasets/br-calls/` e confia na chave de
+**teste** (`data/test-vectors/datasets/TEST_KEY.json`). Para servir os vetores localmente:
 
 ```bash
-npx expo prebuild --platform android
-cd android && ./gradlew :app:assembleRelease   # APK com JS embutido, sem Expo Go
-adb install -r app/build/outputs/apk/release/app-release.apk
+mkdir -p /tmp/www/datasets && cp -r data/test-vectors/datasets/v2 /tmp/www/datasets/br-calls
+python3 -m http.server 17887 --bind 127.0.0.1 --directory /tmp/www
 ```
 
-No primeiro uso, conceda o papel de **ID de chamada e spam** (Configurações → Apps → Apps padrão) ou aceite o diálogo do app. Sem o papel, o serviço não é invocado; com ele, chamadas recebidas passam pelo motor local offline. Falha do pipeline → ALLOW (nunca bloqueia por erro).
-- **iOS**: equivalente é a Call Directory Extension — planejado (M2, ver roadmap).
+Builds release só aceitam chaves passadas em `-Pantispam.datasetKeys=id:base64` e recusam `test-*`.
 
-## 🧪 Testes
+## Privacidade
 
-```bash
-npm test          # 44 testes do motor crítico
-npm run typecheck # TypeScript estrito
-npm run e2e       # E2E ponta a ponta no Expo Go (emulador headless Android)
-```
+Nada da agenda, do histórico ou de conteúdo de SMS sai do aparelho. O app não pede permissão de
+contatos — assim o Android nem envia ligações de contatos para triagem. Telemetria é opt-in.
+Ver [docs/PRIVACY.md](docs/PRIVACY.md) e [docs/adr/0004-number-privacy.md](docs/adr/0004-number-privacy.md).
 
-O E2E (`scripts/e2e-expo-go.sh`) sobe emulador + metro, instala o Expo Go (SDK 57),
-dispara 5 chamadas simuladas via deep link `exp://…/--/simulate?number=…` e valida as
-decisões (BLOCK/SILENCE/ALLOW) pelos logs `ReactNativeJS`. Requer `ANDROID_SDK_ROOT`
-com AVD `test34` e o APK em `~/Downloads/ExpoGo.apk`.
+## Licença
 
-## 🔐 Privacidade por design
-
-- Processamento **100% local** por padrão; sem conta, sem telemetria, sem anúncios.
-- Contatos/histórico **nunca** saem do aparelho.
-- A única rede opcional é a **IA Assistente** (você fornece a chave OpenRouter; envia apenas o número que você pediu para analisar).
-- Base comunitária (futuro) usará **hash-prefix / k-anonymity** — ver `docs/PRIVACY.md` e `docs/THREAT_MODEL.md`.
-
-## 🗂️ Estrutura
-
-```
-app/                  # Telas (expo-router): onboarding, (tabs), donate
-src/core/             # Motor puro e testável
-  phone/              #   normalização BR + emergências + regras 0303
-  detection/          #   SpamScore + CampaignDetector
-  decision/           #   SpamDecisionEngine (pipeline §4)
-  rules/              #   motor de regras do usuário
-  reputation/         #   reputação local com anti-abuse
-  database/           #   banco de spam (formato aberto) + seed
-  security/           #   SHA-256 (hash-prefix privacy)
-  donation/           #   PIX BR Code (EMV + CRC16)
-  ai/                 #   cliente OpenRouter (opcional, off por padrão)
-src/services/          # Store global, screening service, backup, ponte nativa
-src/ui/               # Design system (tema + componentes)
-native/android/       # Kotlin de referência (CallScreeningService)
-docs/                 # RESEARCH, PRD, ARCHITECTURE, THREAT_MODEL, PRIVACY, ROADMAP…
-__tests__/            # Testes do motor crítico (Jest)
-```
-
-## 🗺️ Próximos passos
-
-Ver **[docs/ROADMAP.md](docs/ROADMAP.md)** — inclui a avaliação de viabilidade (técnica e legal) dos recursos avançados pedidos: SMS spam, "modo troll", gravação de áudio, geolocalização de originadores, cruzamento com dados públicos, integração OLX/Mercado Livre, e-mails/WhatsApp vinculados.
-
-## 📄 Licença
-
-MIT — veja [LICENSE](LICENSE). Contribua: [CONTRIBUTING.md](CONTRIBUTING.md) · Segurança: [SECURITY.md](SECURITY.md) · Doar: [DONATE.md](DONATE.md)
+MIT — [LICENSE](LICENSE). Contribua: [CONTRIBUTING.md](CONTRIBUTING.md) · Segurança: [SECURITY.md](SECURITY.md)
