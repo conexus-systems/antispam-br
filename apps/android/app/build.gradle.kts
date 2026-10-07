@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -13,6 +15,11 @@ val testKeyB64: String = run {
 /** Chaves de produção: "keyId:base64,keyId2:base64". Vazio até a cerimônia de chaves (ver docs/specs/DATASET_FORMAT.md §6). */
 val releaseKeys: String = (findProperty("antispam.datasetKeys") as String?) ?: ""
 
+/** Arquivo .properties da chave de upload, sempre fora do repositório. Sem ele o release sai sem assinatura. */
+val uploadSigning: Properties? = (findProperty("antispam.signingProperties") as String?)?.let { path ->
+    Properties().apply { file(path).inputStream().use { load(it) } }
+}
+
 android {
     namespace = "br.antispam.app"
     compileSdk = 36
@@ -21,12 +28,23 @@ android {
         applicationId = "br.antispam.app"
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = (findProperty("antispam.versionCode") as String?)?.toInt() ?: 1
+        versionName = (findProperty("antispam.versionName") as String?) ?: "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "DATASET_BASE_URL", "\"https://datasets.antispam-br.org/br-calls/\"")
         buildConfigField("String", "DATASET_KEYS", "\"$releaseKeys\"")
         buildConfigField("boolean", "ALLOW_TEST_KEYS", "false")
+    }
+
+    signingConfigs {
+        if (uploadSigning != null) {
+            create("upload") {
+                storeFile = file(uploadSigning.getProperty("storeFile"))
+                storePassword = uploadSigning.getProperty("storePassword")
+                keyAlias = uploadSigning.getProperty("keyAlias")
+                keyPassword = uploadSigning.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
@@ -40,6 +58,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (uploadSigning != null) signingConfig = signingConfigs.getByName("upload")
         }
     }
 

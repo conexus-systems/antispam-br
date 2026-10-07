@@ -60,6 +60,22 @@ python3 -m http.server 17887 --bind 127.0.0.1 --directory /tmp/www
 
 Builds release só aceitam chaves passadas em `-Pantispam.datasetKeys=id:base64` e recusam `test-*`.
 
+### Publicação na Google Play
+
+A chave de upload e a conta de serviço ficam fora do repositório (`~/secrets/`).
+
+```bash
+cd apps/android
+./gradlew :engine:test :app:lintRelease :app:bundleRelease \
+  -Pantispam.signingProperties=$HOME/secrets/antispam-br-upload.properties \
+  -Pantispam.versionCode=2 -Pantispam.versionName=0.1.1
+cd ../..
+GOOGLE_PLAY_SERVICE_ACCOUNT=$HOME/secrets/google-play-service-account.json \
+  node apps/android/scripts/play-upload.ts --aab apps/android/app/build/outputs/bundle/release/app-release.aab --track internal
+```
+
+Enquanto o app estiver em rascunho na Console, só releases `draft` são aceitas. Ficha da loja: `apps/android/play/listing-pt-BR.md`.
+
 ## Privacidade
 
 Nada da agenda, do histórico ou de conteúdo de SMS sai do aparelho. O app não pede permissão de
