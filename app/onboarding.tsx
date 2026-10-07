@@ -4,8 +4,8 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { theme } from '../src/ui/theme';
 import { Btn, Card } from '../src/ui/components';
-import { setState } from '../src/app/store';
-import { isCallScreeningRoleHeld, isNativeScreeningAvailable, requestCallScreeningRole } from '../src/app/nativeBridge';
+import { setState } from '../src/services/store';
+import { isCallScreeningRoleHeld, isNativeScreeningAvailable, requestCallScreeningRole } from '../src/services/nativeBridge';
 
 const STEPS = [
   {

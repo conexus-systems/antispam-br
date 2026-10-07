@@ -1,0 +1,105 @@
+{
+  "description": "Corpus anonimizado para o SMS Scam Engine (M4). Nenhum número real, nenhum texto copiado de caso real — exemplos sintéticos construídos do zero a partir dos padrões documentados em docs/research/BRAZIL.md. Cobertura exigida: spam, telemarketing, golpe, mensagem legítima, banco legítimo, entrega legítima, OTP legítimo.",
+  "license": "CC0-1.0",
+  "version": "2026-10-07",
+  "cases": [
+    {
+      "id": "spam-generic-01",
+      "type": "spam",
+      "sender": "45321",
+      "body": "Voce ganhou um premio! Acesse bit.ly/promo123 e cadastre seu CPF para receber. Corra, vagas limitadas!",
+      "expect_verdict": "SCAM"
+    },
+    {
+      "id": "spam-generic-02",
+      "type": "spam",
+      "sender": null,
+      "body": "Parabens! Seu numero foi sorteado. http://193.22.11.4/premio pague apenas a taxa de envio de R$ 19,90.",
+      "expect_verdict": "SCAM"
+    },
+    {
+      "id": "telemarketing-01",
+      "type": "telemarketing",
+      "sender": "30300",
+      "body": "Oferta exclusiva: plano de TV por apenas R$ 99,90. Ligue 0800 555 0303 e contrate hoje mesmo.",
+      "expect_verdict": "SUSPECT"
+    },
+    {
+      "id": "golpe-pix-01",
+      "type": "golpe",
+      "sender": null,
+      "body": "Sua conta sera bloqueada em 1 hora. Regularize agora via chave pix 123.456.789-09 e evite o cancelamento.",
+      "expect_verdict": "SCAM"
+    },
+    {
+      "id": "golpe-banco-01",
+      "type": "golpe",
+      "sender": "Nubank",
+      "body": "Detectamos acesso suspenso na sua conta. Atualize seu cadastro em http://nubank-seguranca.xyz ate hoje.",
+      "expect_verdict": "SCAM"
+    },
+    {
+      "id": "golpe-entrega-01",
+      "type": "golpe",
+      "sender": "Correios",
+      "body": "Sua encomenda parou na alfandega. Pague a taxa de liberacao de R$ 12,50 em bit.ly/correios-taxa para reagendar a entrega.",
+      "expect_verdict": "SCAM"
+    },
+    {
+      "id": "golpe-otp-01",
+      "type": "golpe",
+      "sender": "desconhecido",
+      "body": "Oi, me passe o codigo de verificacao que chegou no seu celular, e urgente, e pra minha conta ser liberada.",
+      "expect_verdict": "SUSPECT"
+    },
+    {
+      "id": "golpe-homoglifo-01",
+      "type": "golpe",
+      "sender": null,
+      "body": "Fatura vencida, pague agora: https://xn--nubank-fqb.com/pagamento",
+      "expect_verdict": "SCAM"
+    },
+    {
+      "id": "legit-msg-01",
+      "type": "mensagem_legitima",
+      "sender": "+5511999990001",
+      "body": "Oi, tudo bem? Te ligo mais tarde pra combinarmos o almoco de amanha.",
+      "expect_verdict": "SAFE"
+    },
+    {
+      "id": "legit-bank-01",
+      "type": "banco_legitimo",
+      "sender": "Itau",
+      "body": "Compra aprovada de R$ 45,00 no cartao final 1234. Nao reconhece? Ligue no numero do verso do cartao.",
+      "expect_verdict": "SAFE"
+    },
+    {
+      "id": "legit-bank-02",
+      "type": "banco_legitimo",
+      "sender": "Caixa",
+      "body": "Seu extrato do FGTS esta disponivel no app. Consulte sem custo.",
+      "expect_verdict": "SAFE"
+    },
+    {
+      "id": "legit-delivery-01",
+      "type": "entrega_legitima",
+      "sender": "iFood",
+      "body": "Seu pedido saiu para entrega! Acompanhe em tempo real pelo app.",
+      "expect_verdict": "SAFE"
+    },
+    {
+      "id": "legit-otp-01",
+      "type": "otp_legitimo",
+      "sender": "WhatsApp",
+      "body": "Seu codigo de verificacao WhatsApp: 123-456. Nao compartilhe este codigo com ninguem.",
+      "expect_verdict": "SAFE"
+    },
+    {
+      "id": "legit-otp-02",
+      "type": "otp_legitimo",
+      "sender": "Google",
+      "body": "Use 987654 para verificar sua conta Google. Nao informe a terceiros.",
+      "expect_verdict": "SAFE"
+    }
+  ]
+}

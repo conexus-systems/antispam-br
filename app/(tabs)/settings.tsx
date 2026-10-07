@@ -12,10 +12,10 @@ import {
   toggleList,
   getState,
   setState,
-} from '../../src/app/store';
-import { importBackup, exportBackup } from '../../src/app/backup';
-import { getDb } from '../../src/app/screening';
-import { isCallScreeningRoleHeld, isNativeScreeningAvailable, openCallScreeningSettings, requestCallScreeningRole } from '../../src/app/nativeBridge';
+} from '../../src/services/store';
+import { importBackup, exportBackup } from '../../src/services/backup';
+import { getDb } from '../../src/services/screening';
+import { isCallScreeningRoleHeld, isNativeScreeningAvailable, openCallScreeningSettings, requestCallScreeningRole } from '../../src/services/nativeBridge';
 import { HANDLE_0303_LABELS, type Handle0303 } from '../../src/core/phone/brazilRules';
 import type { ProtectionMode } from '../../src/core/types';
 

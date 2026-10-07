@@ -14,6 +14,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: package-lock.json
       - name: Install
         run: npm install --no-audit --no-fund --legacy-peer-deps
       - name: Typecheck
@@ -24,6 +25,25 @@ jobs:
         run: npx expo export --platform android --output-dir dist-ci
       - name: Dependency audit (informativo)
         run: npm audit --omit=dev || true
+
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: services/api/package-lock.json
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Unit + HTTP tests (reputation, anti-abuse, Ed25519)
+        run: npm test
 
   security-secrets:
     runs-on: ubuntu-latest
@@ -38,3 +58,79 @@ jobs:
           else
             echo "OK: nenhum secret hardcoded"
           fi
+
+  licenses:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm install --no-audit --no-fund --legacy-peer-deps
+      - name: License scan (bloqueia GPL/AGPL no app)
+        run: |
+          npx --yes license-checker --production --json > licenses.json
+          node -e "
+            const l = require('./licenses.json');
+            const banned = /(GPL|AGPL|LGPL)/i;
+            const bad = Object.entries(l).filter(([p, v]) => banned.test(v.licenses || ''));
+            if (bad.length) {
+              console.error('Dependências com licença copyleft detectadas:');
+              bad.forEach(([p, v]) => console.error('-', p, v.licenses));
+              process.exit(1);
+            }
+            console.log('OK: nenhuma licença copyleft em produção');
+          "
+
+  sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm install --no-audit --no-fund --legacy-peer-deps
+      - name: Generate SBOM (CycloneDX)
+        run: npx --yes @cyclonedx/cyclonedx-npm --omit-dev --output-file sbom.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.json
+
+  datasets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate data/ schemas e regras
+        run: |
+          node -e "
+            const fs = require('fs');
+            // JSON válido em data/**
+            for (const dir of ['data/rules', 'data/public', 'data/schemas']) {
+              if (!fs.existsSync(dir)) continue;
+              for (const f of fs.readdirSync(dir)) {
+                if (!f.endsWith('.json')) continue;
+                JSON.parse(fs.readFileSync(dir + '/' + f, 'utf8'));
+              }
+            }
+            // regras: emergência nunca pode ter suggested_action != ALLOW
+            for (const f of fs.readdirSync('data/rules')) {
+              if (!f.endsWith('.json')) continue;
+              const r = JSON.parse(fs.readFileSync('data/rules/' + f, 'utf8'));
+              for (const rule of r.rules || []) {
+                if (rule.match && rule.match.emergency && rule.suggested_action !== 'ALLOW') {
+                  console.error('REGRA PERIGOSA:', f, rule.id);
+                  process.exit(1);
+                }
+                if (rule.hard && rule.suggested_action === 'BLOCK') {
+                  console.error('Regra hard com BLOCK não é permitida:', f, rule.id);
+                  process.exit(1);
+                }
+              }
+            }
+            console.log('OK: data/ validado (JSON parse + regras de emergência)');
+          "

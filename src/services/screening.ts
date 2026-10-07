@@ -4,7 +4,6 @@
  * Expo Go: fluxo completo com chamadas SIMULADAS (demonstração/testes).
  * Development build Android: o CallScreeningService nativo chama `ingestIncomingCall()`.
  */
-import * as Notifications from 'expo-notifications';
 import type { CallContext, CallDecision, HistoryEntry, ReportCategory } from '../core/types';
 import { decide } from '../core/decision/decisionEngine';
 import { formatDisplay, normalizePhone } from '../core/phone/normalize';
@@ -13,6 +12,7 @@ import { SpamDatabase } from '../core/database/spamDatabase';
 import { seedDatabase } from '../core/database/seed';
 import { addHistory, getState, updateHistory } from './store';
 import { isNativeScreeningAvailable, notifyNativeDecision } from './nativeBridge';
+import { getNotifications } from './notifications';
 
 let db: SpamDatabase | null = null;
 
@@ -90,13 +90,17 @@ export async function ingestIncomingCall(ctx: CallContext, simulated = false): P
     void notifyLocal(entry, decision).catch(() => {});
   }
 
-  if (isNativeScreeningAvailable()) {
+  // Fonte única da resposta ao nativo: SIMULADOR não devolve decisão (o nativo
+  // cai em ALLOW por timeout); chamada REAL do CallScreeningService responde aqui.
+  if (!simulated && isNativeScreeningAvailable()) {
     void notifyNativeDecision(decision.normalized.canonical, decision.action).catch(() => {});
   }
   return decision;
 }
 
 async function notifyLocal(entry: HistoryEntry, d: CallDecision): Promise<void> {
+  const Notifications = getNotifications();
+  if (!Notifications) return; // Expo Go: notificações locais indisponíveis
   const labels: Record<string, string> = {
     BLOCK: '🚫 Bloqueada',
     SILENCE: '🔇 Silenciada',

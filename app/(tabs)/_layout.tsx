@@ -6,6 +6,7 @@ const ICONS: Record<string, string> = {
   index: '🛡️',
   history: '📜',
   verify: '🔍',
+  sms: '✉️',
   settings: '⚙️',
 };
 
@@ -28,6 +29,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" options={{ title: 'Início' }} />
       <Tabs.Screen name="history" options={{ title: 'Histórico' }} />
       <Tabs.Screen name="verify" options={{ title: 'Verificar' }} />
+      <Tabs.Screen name="sms" options={{ title: 'SMS' }} />
       <Tabs.Screen name="settings" options={{ title: 'Ajustes' }} />
     </Tabs>
   );

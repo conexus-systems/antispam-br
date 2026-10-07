@@ -1,6 +1,7 @@
 <!--
-  Snippet de referência — integrar ao android/app/src/main/AndroidManifest.xml no prebuild
-  (fase "development build", ver ROADMAP.md M2).
+  Referência — o manifest REAL agora vive em
+  modules/antispam-screening/android/src/main/AndroidManifest.xml
+  e é mesclado automaticamente pelo autolinking do Expo (M2 concluído).
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <application>

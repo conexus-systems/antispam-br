@@ -27,7 +27,7 @@ export function seedDatabase(): ReputationEntry[] {
   });
 
   return [
-    mk('+551140028922', 'telemarketing', 78, 142, 96),
+    mk('+551140028922', 'telemarketing', 90, 142, 96),
     mk('+551140038700', 'telemarketing', 74, 89, 61),
     mk('+5511987654321', 'golpe', 92, 301, 214),
     mk('+5521976543210', 'fraude', 90, 178, 132),

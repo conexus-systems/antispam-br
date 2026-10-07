@@ -135,4 +135,10 @@ export class SpamDatabase {
   exportAll(): ReputationEntry[] {
     return [...this.entries.values()];
   }
+
+  /** Testes: zera o banco em memória (não afeta o storage). */
+  resetForTests(): void {
+    this.entries.clear();
+    this.loaded = true;
+  }
 }

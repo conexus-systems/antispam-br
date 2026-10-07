@@ -3,8 +3,8 @@ import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react
 import { theme } from '../../src/ui/theme';
 import { actionColor, actionLabel } from '../../src/ui/theme';
 import { Badge, Btn, Card } from '../../src/ui/components';
-import { useAppState, getState, toggleList } from '../../src/app/store';
-import { reportHistoryEntry } from '../../src/app/screening';
+import { useAppState, getState, toggleList } from '../../src/services/store';
+import { reportHistoryEntry } from '../../src/services/screening';
 import { REPORT_CATEGORY_LABELS, type HistoryEntry, type ReportCategory } from '../../src/core/types';
 
 const CATEGORIES = Object.keys(REPORT_CATEGORY_LABELS) as ReportCategory[];

@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://antispam.br/schemas/rule.schema.json",
+  "title": "Regra local (seed do RuleEngine)",
+  "type": "object",
+  "required": ["version", "country", "rules"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "string" },
+    "country": { "type": "string", "pattern": "^[A-Z]{2}$" },
+    "description": { "type": "string" },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "match", "category", "suggested_action", "severity", "enabled"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "match": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 3,
+            "additionalProperties": false,
+            "properties": {
+              "prefix": { "type": "string", "pattern": "^[0-9+]+$" },
+              "regex": { "type": "string" },
+              "foreign_ddi": { "type": "boolean" },
+              "emergency": { "type": "boolean" }
+            }
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "TELEMARKETING", "ROBOCALL", "SILENT_CALL", "COLLECTION", "BANK_SCAM",
+              "PIX_SCAM", "PHISHING", "DELIVERY_SCAM", "FAKE_SUPPORT", "LOAN",
+              "SURVEY", "SPOOFING", "LEGITIMATE", "OTHER"
+            ]
+          },
+          "suggested_action": {
+            "type": "string",
+            "enum": ["ALLOW", "WARN", "SILENCE", "BLOCK"]
+          },
+          "reason": { "type": "string", "maxLength": 200 },
+          "severity": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "enabled": { "type": "boolean" },
+          "hard": { "type": "boolean", "description": "Regras hard (ex.: emergências) não podem ser desabilitadas pelo usuário." }
+        }
+      }
+    }
+  }
+}

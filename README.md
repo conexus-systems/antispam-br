@@ -26,8 +26,9 @@ Feito para o Brasil: entende `+55`, DDD, 9º dígito, `0800`, `0303`, `4004/3003
 | Backup JSON validado (anti-payload-malicioso) | ✅ |
 | Doação PIX com BR Code gerado no aparelho (CRC16/EMV) | ✅ |
 | Simulador de chamadas (funciona no Expo Go, iOS e Android) | ✅ |
-| Módulo nativo Kotlin de referência (CallScreeningService + RoleManager) | ✅ código de referência |
-| Bloqueio real em device | 🔜 dev build (ver [Roadmap](docs/ROADMAP.md)) |
+| **CallScreeningService real (Android 10+)** — módulo Expo local, papel ROLE_CALL_SCREENING, fail-safe, timeout 1,2 s, cache | ✅ dev build/standalone |
+| APK standalone (JS embutido, sem Expo Go) instalado e validado em device | ✅ |
+| iOS (Call Directory Extension) | 🔜 ver [Roadmap](docs/ROADMAP.md) |
 
 ## 🚀 Rodando
 
@@ -37,20 +38,29 @@ npx expo start          # escaneie o QR com Expo Go (iOS/Android)
 ```
 
 - **Expo Go**: tudo funciona em **modo demonstração** — use o **Simulador de chamadas** na aba Início para ver o pipeline completo (normalização → regras → base → score → decisão → histórico → denúncia).
-- **Bloqueio real**: exige *development build* Android com o módulo nativo (`native/android/` — CallScreeningService não existe no Expo Go nem no iOS via Expo Go; no iOS o equivalente é a Call Directory Extension, planejada no M2 do roadmap).
+- **Bloqueio real (Android)**: build standalone com o módulo nativo integrado (M2 ✅):
 
 ```bash
-# dev build (quando integrar o módulo nativo ao prebuild)
 npx expo prebuild --platform android
-npx expo run:android
+cd android && ./gradlew :app:assembleRelease   # APK com JS embutido, sem Expo Go
+adb install -r app/build/outputs/apk/release/app-release.apk
 ```
+
+No primeiro uso, conceda o papel de **ID de chamada e spam** (Configurações → Apps → Apps padrão) ou aceite o diálogo do app. Sem o papel, o serviço não é invocado; com ele, chamadas recebidas passam pelo motor local offline. Falha do pipeline → ALLOW (nunca bloqueia por erro).
+- **iOS**: equivalente é a Call Directory Extension — planejado (M2, ver roadmap).
 
 ## 🧪 Testes
 
 ```bash
-npm test          # 42 testes do motor crítico
+npm test          # 44 testes do motor crítico
 npm run typecheck # TypeScript estrito
+npm run e2e       # E2E ponta a ponta no Expo Go (emulador headless Android)
 ```
+
+O E2E (`scripts/e2e-expo-go.sh`) sobe emulador + metro, instala o Expo Go (SDK 57),
+dispara 5 chamadas simuladas via deep link `exp://…/--/simulate?number=…` e valida as
+decisões (BLOCK/SILENCE/ALLOW) pelos logs `ReactNativeJS`. Requer `ANDROID_SDK_ROOT`
+com AVD `test34` e o APK em `~/Downloads/ExpoGo.apk`.
 
 ## 🔐 Privacidade por design
 
@@ -73,7 +83,7 @@ src/core/             # Motor puro e testável
   security/           #   SHA-256 (hash-prefix privacy)
   donation/           #   PIX BR Code (EMV + CRC16)
   ai/                 #   cliente OpenRouter (opcional, off por padrão)
-src/app/              # Store global, screening service, backup, ponte nativa
+src/services/          # Store global, screening service, backup, ponte nativa
 src/ui/               # Design system (tema + componentes)
 native/android/       # Kotlin de referência (CallScreeningService)
 docs/                 # RESEARCH, PRD, ARCHITECTURE, THREAT_MODEL, PRIVACY, ROADMAP…

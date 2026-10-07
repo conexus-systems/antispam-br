@@ -7,13 +7,25 @@
 - ✅ SpamScore auditável + fail-safe + explicabilidade (42 testes)
 - ✅ Denúncias locais com anti-abuse (M8 local)
 - ✅ Doação PIX BR Code (M12) · IA opcional OpenRouter · backup validado
+- ✅ E2E ponta a ponta no Expo Go SDK 57 (emulador headless): 5 cenários via deep link `--/simulate` validando BLOCK/SILENCE/ALLOW — `npm run e2e`
 - ✅ Docs (RESEARCH, PRD, ARCHITECTURE, THREAT_MODEL, PRIVACY) · CI (build+tests)
+- ✅ **M2 (Android)**: CallScreeningService real via módulo Expo local (autolinking) + APK release standalone instalado em device (moto g(6) play, Android 8) — 51 testes
+- ✅ **M4 — SMS Scam Engine**: pipeline local completo (`src/core/sms/`): normalização → URLs (encurtadores, IP, punycode/homoglifos, TLDs abusados, impersonação de marcas) → heurísticas (PIX, boleto, falso banco/entrega/suporte, urgência, senha, OTP, marketing) → score 0–100 → SAFE/SUSPECT/SCAM. Corpus anonimizado com os 7 tipos exigidos (`data/sms-corpus/`) + 32 testes dedicados (83 no total). Texto nunca sai do device (só bodyHash opt-in).
+- ✅ **Research/agentes/data**: `docs/research/` (5 docs), capabilities/limitations Android+iOS, legal review, fontes BR, 13 agentes (ROLE/TASKS/DECISIONS) + ORCHESTRATOR, `data/schemas` + regras seed + CI com license scan/SBOM/dataset validation
+- ✅ **M8 — Base comunitária + API**: `services/api/` — reputation engine server-side (thresholds configuráveis, decaimento 14d, saturação log), anti-abuse completo (min 2 denunciantes, burst filter, replay, dedup, reporter weight, outlier, quarentena), manifest Ed25519 com anti-rollback, 7 endpoints v1 (Express) + schema Postgres particionado + MV. 21 testes (reputation/anti-abuse/Ed25519/HTTP).
+- ✅ **Tela SMS no app**: `app/(tabs)/sms.tsx` reusa `analyzeSms` — análise on-device com veredito, links, sinais e nota de privacidade.
+- ✅ **iOS-2 (referência Swift)**: `ios/AntiSpamMessageFilter/` — port das heurísticas p/ ILMessageFilterExtension (mesmos pesos/thresholds do TS; sem rede nesta fase).
+- ✅ **M5 — Portal comunitário**: `apps/web/index.html` — consultar (hash local SHA-256 no browser), denunciar, contestar, campanhas, datasets assinados, docs da API. Sem dados pessoais; servido pela própria API (`GET /`) + 1 teste. CI ganha job `backend`; `infra/docker/` sobe API + Postgres 16 com schema aplicado e validado (partição/FK composta/MV).
 
 ## Próximos marcos
 
-### M2 — CallScreeningService real (dev build)
-- Integrar `native/android/` ao prebuild (expo-modules-core ou Expo config plugin).
-- Bridge evento↔JS com timeout e cache de decisões; testes instrumentados.
+### M2 — CallScreeningService real (Android ✅ · iOS pendente)
+- ✅ Módulo Expo local `modules/antispam-screening` (autolinking, zero config manual): papel ROLE_CALL_SCREENING, evento `onIncomingCall`, `notifyDecision`.
+- ✅ Serviço real com fail-safe ALLOW, timeout 1,2 s (nunca perto do timeout do sistema), cache LRU de decisões (30 s) e SILENCE nativo via `setSilenceCall` (API 31+).
+- ✅ Ponte JS (`nativeBridge` + `nativeBridgeEvents`): evento → pipeline local → decisão devolvida ao nativo; fonte única de resposta; 7 testes novos (51 no total).
+- ✅ Config plugin `plugins/withAntiSpamScreening.js` (READ_PHONE_STATE, READ_CONTACTS).
+- ✅ Build standalone validado: `npx expo prebuild --platform android` + `:app:assembleRelease` → APK com JS embutido, sem Expo Go, serviço visível no `dumpsys telecom`.
+- 🔜 Homologação em Android 10+ (RoleManager em devices reais, cenários de operadoras,benchmark p95 no caminho nativo).
 - iOS: Call Directory Extension (bloqueio por lista, atualização em lote).
 
 ### M8 — Base comunitária
@@ -44,7 +56,7 @@
 
 | Recurso | Viabilidade | Plano |
 |---|---|---|
-| **SMS spam** | ⚠️ Parcial (políticas Play) | Android ≤8 receiver real; Android 9+: análise de SMS **encaminhado manualmente** pelo usuário + heurísticas locais. iOS: filtro de SMS via ILMessageFilterExtension (viável!). |
+| **SMS spam** | ✅ **M4 entregue** (motor local) · ⚠️ ingestion (políticas Play) | Motor completo em `src/core/sms/` já analisa qualquer texto localmente. Android ≤8 receiver real; Android 9+: análise de SMS **encaminhado manualmente** pelo usuário. iOS: porta para ILMessageFilterExtension (mesmas heurísticas). |
 | **Modo troll** (resposta automática a spam) | ✅ Android (SMS); ❌ iOS | Off por padrão; aviso de uso responsável; templates editáveis; nunca responder números de emergência/contatos. |
 | **Gravação de chamadas + análise de áudio** | ❌ Android moderno / ❌ iOS | Restrições de plataforma. Alternativa ética: análise de texto **ditado pelo usuário** (opt-in, local). |
 | **Rastrear localização de quem liga** | ❌ | Tecnicamente impossível via API pública e ilegal (LGPD) contra terceiros. Não faremos. |

@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Link, useRouter } from 'expo-router';
-import * as Notifications from 'expo-notifications';
 import { theme } from '../../src/ui/theme';
 import { Badge, Btn, Card, Row } from '../../src/ui/components';
-import { getState, setState, useAppState } from '../../src/app/store';
-import { simulateCall } from '../../src/app/screening';
-import { isCallScreeningRoleHeld, isNativeScreeningAvailable } from '../../src/app/nativeBridge';
-import { requestNotificationPermission } from '../../src/app/notifications';
+import { getState, setState, useAppState } from '../../src/services/store';
+import { simulateCall } from '../../src/services/screening';
+import { isCallScreeningRoleHeld, isNativeScreeningAvailable } from '../../src/services/nativeBridge';
+import { requestNotificationPermission } from '../../src/services/notifications';
 
 function isToday(iso: string): boolean {
   const d = new Date(iso);
@@ -138,7 +137,6 @@ export default function Home() {
             small
             onPress={async () => {
               await requestNotificationPermission();
-              void Notifications.getPermissionsAsync();
             }}
           />
           <Btn title="🧹 Limpar histórico" variant="ghost" small onPress={() => setState({ history: [] })} />

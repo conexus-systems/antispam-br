@@ -1,0 +1,45 @@
+{
+  "$schema": "../schemas/rule.schema.json",
+  "version": "2026-10-07",
+  "country": "BR",
+  "description": "Regras iniciais BR. Emergências NUNCA aparecem aqui (hard-coded em src/core/phone/emergency.ts e intocáveis).",
+  "rules": [
+    {
+      "id": "br-0303-telemarketing",
+      "match": { "prefix": "0303" },
+      "category": "TELEMARKETING",
+      "suggested_action": "WARN",
+      "reason": "Prefixo regulado de telemarketing (0303) — indesejado para muitos, legítimo na origem",
+      "severity": 20,
+      "enabled": true
+    },
+    {
+      "id": "br-0800-neutral",
+      "match": { "prefix": "0800" },
+      "category": "FAKE_SUPPORT",
+      "suggested_action": "WARN",
+      "reason": "0800 é usado por empresas legítimas e por golpes de falso suporte — só o score decide",
+      "severity": 10,
+      "enabled": true
+    },
+    {
+      "id": "br-foreign-ddi-spoof-alert",
+      "match": { "foreign_ddi": true },
+      "category": "SPOOFING",
+      "suggested_action": "WARN",
+      "reason": "Chamada com DDI estrangeiro exibido em linha BR — padrão comum de spoofing",
+      "severity": 30,
+      "enabled": true
+    },
+    {
+      "id": "br-emergency-never-block",
+      "match": { "emergency": true },
+      "category": "OTHER",
+      "suggested_action": "ALLOW",
+      "reason": "Números de emergência jamais são bloqueados (proteção hard-coded)",
+      "severity": 0,
+      "enabled": true,
+      "hard": true
+    }
+  ]
+}
