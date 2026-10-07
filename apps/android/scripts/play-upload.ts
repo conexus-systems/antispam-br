@@ -2,7 +2,7 @@
  * Envia um AAB assinado para um track da Google Play (API Android Publisher v3).
  *
  *   node apps/android/scripts/play-upload.ts --aab <arquivo.aab> \
- *     [--package br.antispam.app] [--track internal] [--status draft] [--name "0.1.0 (1)"] [--dry-run]
+ *     [--package com.conexus.antispam] [--track internal] [--status draft] [--name "0.1.0 (1)"] [--dry-run]
  *
  * Credencial: GOOGLE_PLAY_SERVICE_ACCOUNT (caminho do JSON da conta de serviço), nunca versionada.
  * App novo (ainda em rascunho na Console) só aceita releases com status "draft".
@@ -24,7 +24,7 @@ interface ServiceAccount {
 const { values } = parseArgs({
   options: {
     aab: { type: 'string' },
-    package: { type: 'string', default: 'br.antispam.app' },
+    package: { type: 'string', default: 'com.conexus.antispam' },
     track: { type: 'string', default: 'internal' },
     status: { type: 'string', default: 'draft' },
     name: { type: 'string' },

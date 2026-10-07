@@ -46,8 +46,8 @@ npm ci && npm test && npm run typecheck
 # Android
 cd apps/android
 ./gradlew :engine:test            # motor + vetores compartilhados
-./gradlew :app:installDebug       # instala br.antispam.app.debug
-adb shell cmd role add-role-holder android.app.role.CALL_SCREENING br.antispam.app.debug
+./gradlew :app:installDebug       # instala com.conexus.antispam.debug
+adb shell cmd role add-role-holder android.app.role.CALL_SCREENING com.conexus.antispam.debug
 ```
 
 O build debug baixa datasets de `http://10.0.2.2:17887/datasets/br-calls/` e confia na chave de

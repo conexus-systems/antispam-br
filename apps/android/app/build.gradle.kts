@@ -25,7 +25,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "br.antispam.app"
+        applicationId = "com.conexus.antispam"
         minSdk = 29
         targetSdk = 36
         versionCode = (findProperty("antispam.versionCode") as String?)?.toInt() ?: 1
