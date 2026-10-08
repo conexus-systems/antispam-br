@@ -1,5 +1,6 @@
-# AntiSpam BR — ambiente local (API + Postgres)
+# AntiSpam BR — ambiente local (API + Postgres). Segredos abaixo são só de desenvolvimento.
 # Uso: docker compose -f infra/docker/docker-compose.yml up --build
+#      docker compose -f infra/docker/docker-compose.yml up -d postgres   (só o banco, p/ testes)
 services:
   postgres:
     image: postgres:16-alpine
@@ -9,11 +10,9 @@ services:
       POSTGRES_DB: antispam
     ports:
       # host 5544: evita conflito com postgres nativo na 5432 da máquina dev
-      - "5544:5432"
+      - "127.0.0.1:5544:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      # schema aplicado no primeiro boot
-      - ../../services/api/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U antispam -d antispam"]
       interval: 5s
@@ -22,22 +21,20 @@ services:
 
   api:
     build:
-      context: ../../services/api
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: services/api/Dockerfile
     environment:
       PORT: 8787
-      NODE_ENV: production
-      # M8+: DATABASE_URL aponta p/ o service postgres (rede interna do compose)
       DATABASE_URL: postgresql://antispam:antispam-dev-only@postgres:5432/antispam
+      SERVER_SECRET: dev-only-server-secret-change-me-0123456789
+      MODERATION_TOKENS: dev:dev-only-moderation-token-change-me-0123
+      POW_BITS: 16
     depends_on:
       postgres:
         condition: service_healthy
     ports:
-      # host 17887: evita conflito/segurança de portas do ambiente dev
-      - "17887:8787"
-    volumes:
-      # portal Web servido pela API (apps/web montado em ../apps/web relativo ao cwd da api)
-      - ../../apps/web:/app/apps/web:ro
+      # host 17887: evita conflito com portas do ambiente dev
+      - "127.0.0.1:17887:8787"
 
 volumes:
   pgdata:

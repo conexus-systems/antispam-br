@@ -6,10 +6,10 @@ Atualizado em 2026-10-07. O protótipo Expo anterior está em `apps/legacy-expo/
 |---|---|---|
 | **M0** | Research, ADRs, arquitetura, formato de dataset, threat model | ✅ concluído |
 | **M1** | Android call blocker offline (nativo) | 🟡 núcleo pronto e validado em emulador; falta onboarding/UX e homologação em aparelhos reais |
-| **M2** | Base comunitária + API em PostgreSQL | 🔜 próximo |
-| **M3** | Publicação automática de datasets assinados + atualização no app | 🟡 cliente pronto (M1); falta pipeline de publicação e cerimônia de chaves |
+| **M2** | Base comunitária + API em PostgreSQL | ✅ API, reputação, anti-poisoning e moderação (falta envio pelo Android) |
+| **M3** | Publicação automática de datasets assinados + atualização no app | 🟡 publicação assinada a partir do banco pronta; falta Object Storage/CDN e cerimônia de chaves |
 | **M4** | Detecção de SMS fraudulento | 🟡 motor TS no protótipo; portar para Kotlin + share sheet (ADR 0008) |
-| **M5** | Portal comunitário | 🟡 protótipo estático em `apps/web` |
+| **M5** | Portal comunitário | 🟡 portal estático servido pela API (consulta k-anônima, denúncia com PoW, campanhas) |
 | **M6** | iOS (Call Directory + Message Filter + Reporting; Live Caller ID depois) | 🔜 |
 | **M7** | ML local | 🔜 |
 | **M8** | Anti-abuse avançado | 🔜 |
@@ -33,17 +33,27 @@ Falta para fechar M1:
 5. Benchmark de cold start do processo até `respondToCall` em aparelho de entrada.
 6. Dataset seed inicial publicado (depende de M3 ou de lista curada manualmente com fontes permitidas).
 
-## M2 — Comunidade + API
-1. `packages/reputation` com o algoritmo do ADR 0006 (peso por denunciante, Σw, meia-vida 30 d, quarentena de surto) + vetores `data/test-vectors/reputation.json`.
-2. Migrar `services/api` de store em memória para PostgreSQL (migrations, testes de banco com container).
-3. Token de dispositivo rotativo + PoW; rate limit por token e por rede; nonce anti-replay.
-4. Consulta por hash-prefix (k-anonimato) e fila de contestação/moderação (`services/moderation`).
-5. Envio opt-in de denúncias pelo Android (fila `local_reports.synced`).
+## M2 — Comunidade + API (detalhe)
+
+Entregue:
+- `packages/reputation` (ADR 0006 + adendo) com 27 testes e vetores adversariais em
+  `data/test-vectors/reputation.json` (Sybil numa rede, Sybil espalhado, contas de uma semana,
+  contestações em massa).
+- `services/api` em PostgreSQL: migrations, denúncias particionadas por mês, retenção, dispositivo
+  pseudônimo com PoW, nonce anti-replay, rate limit em tabela `UNLOGGED`, consulta k-anônima,
+  votos por referência opaca, contestação, moderação com trilha de auditoria.
+- 54 testes contra Postgres real no CI; imagem Docker; checagem de licenças e SBOM.
+
+Falta:
+1. Envio opt-in de denúncias pelo Android (fila `local_reports.synced`) e consulta pela API.
+2. Endpoint de organizações verificadas (hoje só por SQL).
 
 ## M3 — Publicação de datasets
-1. Job `services/ingestion` aplica `PUBLICATION_POLICY` e gera shards/deltas com `packages/datasets`.
-2. Assinatura com chave offline (CI secret isolado ou HSM), duas chaves embarcadas.
-3. Publicação em Object Storage + CDN; manifest com `expires_at` de 14 dias.
+Entregue: `publish-dataset` gera shards/deltas/tombstones com `packages/datasets`, assina Ed25519,
+versão monotônica `YYYYMMDDNN`, campanhas agregadas.
+Falta:
+1. Arquivos em Object Storage + CDN (hoje `bytea` no Postgres).
+2. Cerimônia de chaves (chave offline/HSM, duas chaves embarcadas no app) e job agendado.
 
 ## Riscos de cronograma
 - Live Caller ID depende de aprovação/entitlement da Apple e de servidor PIR próprio.

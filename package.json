@@ -8,13 +8,15 @@
     "node": ">=22.18"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "services/api"
   ],
   "scripts": {
-    "test": "npm test --workspaces",
+    "test": "npm test -w @antispam-br/phone-normalizer -w @antispam-br/datasets -w @antispam-br/reputation",
     "typecheck": "npm run typecheck --workspaces",
     "vectors:generate": "node packages/datasets/scripts/gen-test-vectors.ts",
-    "vectors:check": "npm run vectors:generate && git diff --exit-code -- data/test-vectors"
+    "vectors:check": "npm run vectors:generate && git diff --exit-code -- data/test-vectors",
+    "test:api": "npm test -w @antispam-br/api"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

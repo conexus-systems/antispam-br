@@ -23,15 +23,12 @@ apps/
   web/                portal comunitário estático
   legacy-expo/        protótipo React Native congelado (ADR 0001) — removido após paridade
 services/
-  api/                API comunitária (Node 22 + TS) → PostgreSQL (M2)
-  moderation/         (M2) fila de contestação e quarentena
-  ingestion/          (M3) job de publicação de datasets assinados
+  api/                API comunitária (Node 22 + TS) → PostgreSQL: denúncias, moderação, publicação de datasets (`cli.ts publish`)
 packages/
   phone-normalizer/   normalização BR (TS) — referência dos vetores
   datasets/           formato binário, manifest, assinatura, deltas, gerador de vetores
-  reputation/         (M2) score comunitário + anti-poisoning (hoje em services/api/src)
+  reputation/         score comunitário + anti-poisoning (ADR 0006), puro e determinístico
   spam-engine/        (M4) motor SMS TS (hoje no legacy-expo, src/core/sms)
-  rules/              (M2) validação de data/rules
 data/
   rules/              brazil-numbering.json (fatos verificados), regras padrão, categorias
   schemas/            JSON Schemas (report, rule, manifest)
@@ -96,12 +93,17 @@ Detalhes: [`ANDROID_CAPABILITIES.md`](ANDROID_CAPABILITIES.md), [`IOS_CAPABILITI
 
 ## 6. Backend (M2)
 
-- API (`services/api`): `GET /v1/numbers/{hash-prefix}/reputation` (k-anonimato), `POST /v1/reports`,
-  `POST /v1/reports/{id}/vote`, `POST /v1/numbers/{number}/legitimate`, `GET /v1/datasets/manifest`,
-  `GET /v1/datasets/{version}`, `GET /v1/campaigns`.
-- PostgreSQL 16: `reports` particionada por mês; reputação materializada por número tocado;
-  rate limit em tabela `UNLOGGED`; Redis/Bloom só se a medição justificar (ADR 0007).
-- Token de dispositivo rotativo + prova de trabalho no registro; nunca conta de usuário obrigatória.
+- API (`services/api`, ver README): `GET /v1/numbers/{number}/reputation` (neutra até publicar),
+  `GET /v1/reputation/hash-prefix/{prefix}` (k-anonimato), `POST /v1/reports`,
+  `POST /v1/reports/{ref}/vote`, `POST /v1/numbers/{number}/legitimate`, `GET /v1/datasets/manifest`,
+  `GET /v1/datasets/{version}`, `GET /v1/campaigns`, rotas de moderação com token.
+- PostgreSQL 16: `reports` particionada por mês (retenção 14 meses, comentários 90 dias);
+  `reputations` recalculada por número tocado e, de hora em hora, por tempo; rate limit em tabela
+  `UNLOGGED`; estatísticas da frota em `fleet_stats`. Sem Redis (ADR 0007).
+- Dispositivo pseudônimo com prova de trabalho de uso único; token guardado só como SHA-256; rede
+  guardada só como HMAC do /24 (IPv4) ou /32 (IPv6). Nunca conta de usuário obrigatória.
+- Publicação (`npm run publish-dataset`): recalcula, aplica a política do ADR 0006, gera shards,
+  deltas e tombstones com `packages/datasets` e assina Ed25519 com chave fora da API.
 
 ## 7. Qualidade
 
@@ -109,6 +111,8 @@ Detalhes: [`ANDROID_CAPABILITIES.md`](ANDROID_CAPABILITIES.md), [`IOS_CAPABILITI
 |---|---|
 | `packages/phone-normalizer` | 39 (vetores) |
 | `packages/datasets` | 11 (assinatura, adulteração, rollback, expiração, path traversal, delta) |
+| `packages/reputation` | 27 (vetores adversariais de Sybil, contestação e surto) |
+| `services/api` | 54 contra Postgres real (anti-abuso, moderação, datasets, retenção, portal) |
 | `apps/android/engine` | 78 (vetores compartilhados + instalador + desempenho 1 M registros) |
 | `apps/android/app` (instrumentado) | 3 (Room + coordenador em device) |
 | E2E manual em emulador | 4 ligações GSM reais com dataset servido por HTTP |

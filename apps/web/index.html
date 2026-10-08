@@ -67,88 +67,94 @@
   <button data-view="consultar" class="active">Consultar número</button>
   <button data-view="denunciar">Denunciar / Contestar</button>
   <button data-view="campanhas">Campanhas</button>
+  <button data-view="categorias">Categorias</button>
   <button data-view="datasets">Datasets</button>
   <button data-view="api">API</button>
 </nav>
 
 <main>
-  <!-- ============ CONSULTAR ============ -->
   <section id="view-consultar">
     <div class="card">
       <h2>Consultar reputação de um número</h2>
-      <p class="muted">Digite o número com DDD (ex.: <code>11 99999-9999</code>). O portal calcula o hash <b>no seu navegador</b> — o número nunca é enviado em texto claro.</p>
-      <label for="q-number">Número (somente o que você quer verificar)</label>
+      <p class="muted">Digite o número com DDD (ex.: <code>11 99999-9999</code>). Por padrão o navegador calcula o SHA-256 do número e envia ao servidor <b>só os 5 primeiros caracteres do hash</b>; a comparação final acontece aqui. O servidor não fica sabendo qual número você consultou.</p>
+      <label for="q-number">Número</label>
       <input id="q-number" placeholder="11 99999 9999" inputmode="tel" autocomplete="off" />
-      <button class="btn" id="q-btn">Consultar</button>
+      <button class="btn" id="q-btn">Consultar (privado)</button>
+      <button class="btn ghost" id="q-detail">Ver detalhes no servidor</button>
       <div id="q-result"></div>
-      <p class="privacy-note">🔒 Consulta por hash SHA-256 (E.164). Nenhum dado pessoal é enviado; a resposta é sempre agregada.</p>
+      <p class="privacy-note">"Ver detalhes" envia o número ao servidor para mostrar também números ainda não publicados e os fatores do score. O servidor não grava consultas.</p>
     </div>
   </section>
 
-  <!-- ============ DENUNCIAR ============ -->
   <section id="view-denunciar" class="hidden">
     <div class="card">
       <h2>Denunciar um número</h2>
-      <p class="muted">Sua denúncia é anônima: o servidor recebe apenas o hash do número e um hash rotativo do seu navegador. Uma denúncia isolada <b>nunca</b> bloqueia um número sozinha.</p>
+      <p class="muted">Sem conta e sem e-mail: o navegador resolve uma pequena prova de trabalho e recebe um identificador pseudônimo. Uma denúncia isolada <b>nunca</b> bloqueia um número; é preciso que vários denunciantes independentes concordem por pelo menos 48 horas.</p>
       <label for="d-number">Número</label>
       <input id="d-number" placeholder="11 99999 9999" inputmode="tel" autocomplete="off" />
       <label for="d-category">Categoria</label>
-      <select id="d-category">
-        <option>TELEMARKETING</option><option>ROBOCALL</option><option>SILENT_CALL</option>
-        <option>COLLECTION</option><option>BANK_SCAM</option><option>PIX_SCAM</option>
-        <option>PHISHING</option><option>DELIVERY_SCAM</option><option>FAKE_SUPPORT</option>
-        <option>LOAN</option><option>SURVEY</option><option>SPOOFING</option><option>OTHER</option>
-      </select>
-      <label for="d-comment">Comentário (opcional, sem dados pessoais — passa por moderação)</label>
+      <select id="d-category"></select>
+      <label for="d-comment">Comentário (opcional, sem dados pessoais; só a moderação lê)</label>
       <textarea id="d-comment" maxlength="280" placeholder="Ex.: dizem ser do meu banco e pedem código"></textarea>
       <button class="btn" id="d-btn">Enviar denúncia</button>
       <div id="d-result"></div>
     </div>
 
     <div class="card">
-      <h2>Contestar classificação (falso positivo)</h2>
-      <p class="muted">Número seu ou de uma empresa legítima sendo apontado como spam? Conteste — contestações reduz o score de verdade.</p>
+      <h2>Contestar (falso positivo)</h2>
+      <p class="muted">Número seu ou de uma empresa legítima marcado como spam? A contestação vai para a moderação; vinda de dispositivo com histórico confiável, suspende a publicação até a decisão.</p>
       <label for="c-number">Número</label>
       <input id="c-number" placeholder="11 3333 4444" inputmode="tel" autocomplete="off" />
+      <label for="c-comment">Explique (opcional; só a moderação lê)</label>
+      <textarea id="c-comment" maxlength="280"></textarea>
       <button class="btn ghost" id="c-btn">Contestar como legítimo</button>
       <div id="c-result"></div>
     </div>
   </section>
 
-  <!-- ============ CAMPANHAS ============ -->
   <section id="view-campanhas" class="hidden">
     <div class="card">
-      <h2>Campanhas de golpe ativas (48h)</h2>
-      <p class="muted">Números com rajada de denúncias (≥ 5 em 48 horas). Dados agregados — nenhum denunciante é exposto.</p>
+      <h2>Campanhas ativas</h2>
+      <p class="muted">Blocos de numeração com 3 ou mais números suspeitos nos últimos 14 dias. Os 4 últimos dígitos ficam mascarados.</p>
       <button class="btn" id="camp-btn">Atualizar</button>
-      <table id="camp-table"><thead><tr><th>Número (hash)</th><th>Denúncias</th><th>Padrão</th></tr></thead><tbody></tbody></table>
+      <table id="camp-table"><thead><tr><th>Bloco</th><th>Números</th><th>Categoria</th><th>Última denúncia</th></tr></thead><tbody></tbody></table>
     </div>
   </section>
 
-  <!-- ============ DATASETS ============ -->
+  <section id="view-categorias" class="hidden">
+    <div class="card">
+      <h2>Categorias e faixas de score</h2>
+      <p class="muted">O score (0–100) cresce com denunciantes independentes, confiáveis e recentes, e cai com contestações e com o tempo (meia-vida de 30 dias).</p>
+      <table><thead><tr><th>Faixa</th><th>Score</th></tr></thead><tbody>
+        <tr><td>CLEAN</td><td>0–19</td></tr><tr><td>LOW_RISK</td><td>20–39</td></tr><tr><td>SUSPICIOUS</td><td>40–59</td></tr>
+        <tr><td>SPAM</td><td>60–79</td></tr><tr><td>HIGH_RISK</td><td>80–100</td></tr></tbody></table>
+      <table id="cat-table"><thead><tr><th>Categoria</th><th>Descrição</th></tr></thead><tbody></tbody></table>
+    </div>
+  </section>
+
   <section id="view-datasets" class="hidden">
     <div class="card">
       <h2>Datasets públicos</h2>
-      <p class="muted">Snapshots versionados e assinados (Ed25519). O app recusa qualquer dataset sem assinatura válida ou com hash divergente.</p>
+      <p class="muted">Versões assinadas (Ed25519) com deltas. Os apps recusam dataset com assinatura inválida, expirado ou mais antigo que o instalado.</p>
       <button class="btn" id="ds-btn">Ver manifest atual</button>
       <div id="ds-result"></div>
-      <p class="privacy-note">Conteúdo: apenas dados agregados e anonimizados (CC0-1.0). Não contém nomes, endereços ou qualquer dado pessoal.</p>
     </div>
   </section>
 
-  <!-- ============ API ============ -->
   <section id="view-api" class="hidden">
     <div class="card">
-      <h2>Documentação da API (v1)</h2>
-      <p class="muted">Endpoints públicos. Autenticação por limites de taxa (sem conta necessária para consulta).</p>
-      <pre>GET  /v1/numbers/{sha256}/reputation   → { score, label, total_reports, distinct_reporters }
-POST /v1/reports                       → { number_hash, category, confidence, source, reporter_hash }
-POST /v1/reports/{id}/vote             → { vote: "confirm" | "contest" }
-POST /v1/numbers/{sha256}/legitimate   → contestação de falso positivo
-GET  /v1/datasets/manifest             → manifest assinado (Ed25519)
-GET  /v1/datasets/{version}            → metadados da versão
-GET  /v1/campaigns                     → rajadas ativas (agregado)</pre>
-      <p class="privacy-note">A API rejeita: timestamps futuros (>5 min), denúncias >7 dias, duplicatas por minuto, payloads >16 KB, categorias inválidas. Números em texto claro são sempre rejeitados.</p>
+      <h2>API v1</h2>
+      <pre>GET  /v1/devices/challenge                 → desafio de prova de trabalho
+POST /v1/devices                           { challenge, solution } → { device_token }
+GET  /v1/numbers/{número}/reputation       → score, faixa, fatores (sem dados de denunciantes)
+GET  /v1/reputation/hash-prefix/{5 hex}    → números publicados cujo SHA-256(E.164) começa assim
+POST /v1/reports                           Device token · { number, category, nonce, timestamp, comment? }
+POST /v1/reports/{id}/vote                 Device token · { vote: confirm | dispute, nonce, timestamp }
+POST /v1/numbers/{número}/legitimate       Device token · { nonce, timestamp, comment? }
+GET  /v1/campaigns                         → blocos com campanha ativa (mascarados)
+GET  /v1/datasets/manifest(.sig)           → manifest assinado mais recente
+GET  /v1/datasets/{versão}                 → arquivos da versão</pre>
+      <p class="privacy-note">Limites: 3 ações/min e 20/dia por dispositivo; 200/dia por rede. Emergência e utilidade pública (190, 192, 193…) nunca recebem denúncia.</p>
     </div>
   </section>
 </main>
@@ -157,160 +163,7 @@ GET  /v1/campaigns                     → rajadas ativas (agregado)</pre>
   AntiSpam BR — gratuito, open source, privacy-first · dados comunitários são probabilísticos, nunca verdade absoluta
 </footer>
 
-<script>
-(function () {
-  'use strict';
-  var API = (window.ANTISPAM_API_BASE || location.origin);
-
-  // ---------- navegação ----------
-  var nav = document.getElementById('nav');
-  var views = ['consultar', 'denunciar', 'campanhas', 'datasets', 'api'];
-  function show(v) {
-    views.forEach(function (name) {
-      document.getElementById('view-' + name).classList.toggle('hidden', name !== v);
-    });
-    nav.querySelectorAll('button').forEach(function (b) {
-      b.classList.toggle('active', b.dataset.view === v);
-    });
-  }
-  nav.addEventListener('click', function (e) {
-    var btn = e.target.closest('button[data-view]');
-    if (btn) show(btn.dataset.view);
-  });
-
-  // ---------- hash local do número (privacy: número cru nunca sai) ----------
-  async function sha256Hex(text) {
-    var data = new TextEncoder().encode(text);
-    var digest = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(digest)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
-  }
-  // Normalização simples p/ portal: só dígitos + DDI 55 quando 10-13 dígitos
-  function normalizeToE164(raw) {
-    var d = raw.replace(/\D/g, '');
-    if (!d) return null;
-    if (d.length === 10 || d.length === 11) return '55' + d;
-    if (d.length >= 12 && d.length <= 13) return d;
-    return null;
-  }
-  // Reporter hash rotativo diário (não é um ID fixo)
-  function reporterHash() {
-    var day = new Date().toISOString().slice(0, 10);
-    var seed = (localStorage.getItem('antispam-seed') || Math.random().toString(36).slice(2));
-    localStorage.setItem('antispam-seed', seed);
-    return 'web-' + day + '-' + seed.slice(0, 10);
-  }
-
-  // ---------- consultar ----------
-  document.getElementById('q-btn').addEventListener('click', async function () {
-    var out = document.getElementById('q-result');
-    var e164 = normalizeToE164(document.getElementById('q-number').value);
-    if (!e164) { out.innerHTML = '<p class="err">Número inválido. Use DDD + número (10-11 dígitos).</p>'; return; }
-    var hash = await sha256Hex(e164);
-    out.innerHTML = '<p class="muted">Consultando…</p>';
-    try {
-      var res = await fetch(API + '/v1/numbers/' + hash + '/reputation');
-      if (res.status === 400) { out.innerHTML = '<p class="err">Resposta inválida do servidor.</p>'; return; }
-      var data = await res.json();
-      var color = data.score >= 60 ? 'var(--danger)' : data.score >= 40 ? 'var(--warn)' : 'var(--primary)';
-      out.innerHTML =
-        '<div class="verdict ' + data.label + '">' + data.label + '</div>' +
-        '<div class="score" style="color:' + color + '">' + data.score + '<span style="font-size:14px;color:var(--dim)">/100</span></div>' +
-        '<ul class="clean">' +
-        '<li><b>' + data.total_reports + '</b> denúncias totais</li>' +
-        '<li><b>' + data.distinct_reporters + '</b> denunciantes independentes</li>' +
-        '</ul>' +
-        '<p class="muted">Dados comunitários são probabilísticos. Número legítimo contestado? Use a aba "Denunciar / Contestar".</p>';
-    } catch (e) {
-      out.innerHTML = '<p class="err">API indisponível — rode services/api localmente (npm run dev).</p>';
-    }
-  });
-
-  // ---------- denunciar ----------
-  document.getElementById('d-btn').addEventListener('click', async function () {
-    var out = document.getElementById('d-result');
-    var e164 = normalizeToE164(document.getElementById('d-number').value);
-    if (!e164) { out.innerHTML = '<p class="err">Número inválido.</p>'; return; }
-    var hash = await sha256Hex(e164);
-    try {
-      var res = await fetch(API + '/v1/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          number_hash: hash,
-          category: document.getElementById('d-category').value,
-          confidence: 0.9,
-          source: 'USER_REPORT',
-          reporter_hash: reporterHash()
-        })
-      });
-      var body = await res.json();
-      if (res.status === 201) {
-        out.innerHTML = '<p class="ok">✅ Denúncia registrada (' + body.id + '). Obrigado por proteger a comunidade.</p>';
-      } else {
-        out.innerHTML = '<p class="err">Rejeitada: ' + (body.reason || body.error || res.status) + '</p>';
-      }
-    } catch (e) {
-      out.innerHTML = '<p class="err">API indisponível.</p>';
-    }
-  });
-
-  // ---------- contestar ----------
-  document.getElementById('c-btn').addEventListener('click', async function () {
-    var out = document.getElementById('c-result');
-    var e164 = normalizeToE164(document.getElementById('c-number').value);
-    if (!e164) { out.innerHTML = '<p class="err">Número inválido.</p>'; return; }
-    var hash = await sha256Hex(e164);
-    try {
-      var res = await fetch(API + '/v1/numbers/' + hash + '/legitimate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reporter_hash: reporterHash() })
-      });
-      if (res.status === 201) {
-        out.innerHTML = '<p class="ok">✅ Contestação registrada. O score deste número será reduzido se outras pessoas confirmarem.</p>';
-      } else {
-        out.innerHTML = '<p class="err">Rejeitada (' + res.status + ').</p>';
-      }
-    } catch (e) {
-      out.innerHTML = '<p class="err">API indisponível.</p>';
-    }
-  });
-
-  // ---------- campanhas ----------
-  document.getElementById('camp-btn').addEventListener('click', async function () {
-    var tbody = document.querySelector('#camp-table tbody');
-    try {
-      var res = await fetch(API + '/v1/campaigns');
-      var data = await res.json();
-      tbody.innerHTML = (data.campaigns || []).map(function (c) {
-        return '<tr><td><code>' + c.number_hash.slice(0, 12) + '…</code></td><td>' + c.recent_reports + '</td><td>' + c.category + '</td></tr>';
-      }).join('') || '<tr><td colspan="3" class="muted">Nenhuma campanha ativa no momento. Boa notícia.</td></tr>';
-    } catch (e) {
-      tbody.innerHTML = '<tr><td colspan="3" class="err">API indisponível.</td></tr>';
-    }
-  });
-
-  // ---------- datasets ----------
-  document.getElementById('ds-btn').addEventListener('click', async function () {
-    var out = document.getElementById('ds-result');
-    try {
-      var res = await fetch(API + '/v1/datasets/manifest');
-      if (res.status === 404) { out.innerHTML = '<p class="muted">Nenhum dataset publicado ainda (M8: distribuição em andamento).</p>'; return; }
-      var m = await res.json();
-      out.innerHTML =
-        '<ul class="clean">' +
-        '<li>Versão: <b>' + m.version + '</b></li>' +
-        '<li>Publicação: <b>' + m.timestamp + '</b></li>' +
-        '<li>Registros: <b>' + m.record_count + '</b></li>' +
-        '<li>Licença: <b>' + m.license + '</b></li>' +
-        '<li>Assinatura: <b>Ed25519</b> (' + m.signature.alg + ', key ' + m.signature.public_key_id + ')</li>' +
-        '</ul>' +
-        '<pre>' + JSON.stringify(m.files, null, 2) + '</pre>';
-    } catch (e) {
-      out.innerHTML = '<p class="err">API indisponível.</p>';
-    }
-  });
-})();
-</script>
+<script src="/normalize.js"></script>
+<script src="/app.js"></script>
 </body>
 </html>

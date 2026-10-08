@@ -1,69 +1,71 @@
-# @antispam-br/api — Community API (M8)
+# @antispam-br/api — API comunitária (M2/M3)
 
-API comunitária do AntiSpam BR. **Privacidade primeiro**: a API só conhece
-`SHA-256(number)` — o número cru nunca chega ao servidor.
+Node 22 (TypeScript com type stripping, sem build) + PostgreSQL 16. Reputação calculada por
+`packages/reputation` (ADR 0006), datasets gerados e assinados por `packages/datasets` (ADR 0003).
+Nenhum IP, token ou número de quem denuncia é guardado em claro.
 
 ## Rodar (dev)
 
 ```bash
-cd services/api
-npm install
-npm run dev        # http://localhost:8787
-npm test           # 21 testes (reputation, anti-abuse, Ed25519, HTTP)
-npm run typecheck
+docker compose -f infra/docker/docker-compose.yml up -d --build   # Postgres :5544 + API :17887
+# ou, com um Postgres próprio:
+DATABASE_URL=postgres://... SERVER_SECRET=$(openssl rand -hex 32) npm run migrate -w @antispam-br/api
+DATABASE_URL=postgres://... SERVER_SECRET=... npm start -w @antispam-br/api
 ```
+
+Testes (Postgres real, um schema isolado por arquivo):
+
+```bash
+TEST_DATABASE_URL=postgres://antispam:antispam-dev-only@127.0.0.1:5544/antispam npm run test:api
+```
+
+## Variáveis de ambiente
+
+| Variável | Obrigatória | Uso |
+|---|---|---|
+| `DATABASE_URL` | sim | Conexão Postgres |
+| `SERVER_SECRET` | sim (≥ 32 chars) | HMAC de desafios PoW, refs de denúncia e hash de rede |
+| `PORT` | não (8787) | Porta HTTP |
+| `POW_BITS` | não (20) | Dificuldade da prova de trabalho no registro de dispositivo |
+| `MODERATION_TOKENS` | não | `nome:token,nome2:token2`; sem isso as rotas de moderação respondem 404 |
+| `TRUST_PROXY_HOPS` | não (0) | Quantos proxies confiáveis à frente; usa o N-ésimo IP do `X-Forwarded-For` pela direita |
+| `CLIENT_IP_HEADER` | não | Cabeçalho de IP do proxy de borda (ex.: `cf-connecting-ip`) |
+| `WEB_DIR` | não | Serve o portal estático (`apps/web`) na raiz |
+| `DATASET_SIGNING_SEED_FILE` / `DATASET_KEY_ID` | só `publish` | Semente Ed25519 (32 bytes, base64) e id da chave |
+
+Publicação de dataset (job isolado, chave fora do servidor da API):
+`npm run publish-dataset -w @antispam-br/api`.
 
 ## Endpoints (v1)
 
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/v1/health` | Health check |
-| GET | `/v1/numbers/:hash/reputation` | Reputação agregada (score 0–100 + label) |
-| POST | `/v1/reports` | Denúncia (number_hash + category + confidence + source + reporter_hash) |
-| POST | `/v1/reports/:id/vote` | `confirm` ou `contest` |
-| POST | `/v1/numbers/:hash/legitimate` | Contestação direta (número é legítimo) |
-| GET | `/v1/datasets/manifest` | Manifest do dataset atual (assinado Ed25519) |
-| GET | `/v1/datasets/:version` | Metadados da versão |
-| GET | `/v1/campaigns` | Rajadas ativas (agregado, ≥5 denúncias/48h) |
+| GET | `/healthz` | Saúde (inclui banco) |
+| GET | `/v1/devices/challenge` | Desafio PoW assinado (uso único) |
+| POST | `/v1/devices` | Registra dispositivo pseudônimo; devolve token (guardado só como SHA-256) |
+| GET | `/v1/numbers/{number}/reputation` | Reputação pública: neutra (`NOT_LISTED`) até ser publicável |
+| GET | `/v1/reputation/hash-prefix/{prefix}` | Consulta k-anônima: só números publicados com o prefixo do SHA-256 |
+| POST | `/v1/reports` | Denúncia (token + nonce + timestamp ±10 min); devolve `ref` opaco |
+| POST | `/v1/reports/{ref}/vote` | `confirm` / `dispute` por referência HMAC (não enumerável) |
+| POST | `/v1/numbers/{number}/legitimate` | Contestação "é legítimo" (vai para a fila de moderação) |
+| GET | `/v1/campaigns` | Campanhas agregadas por bloco de 10 mil números (`+55119876XXXX`) |
+| GET | `/v1/datasets/manifest` (+ `.sig`) | Manifest atual assinado |
+| GET | `/v1/datasets/{version}` | Índice da versão; arquivos em `/v1/datasets/{version}/brazil/...` |
+| GET/POST | `/v1/moderation/...` | Fila de contestações, decisão ACCEPT/REJECT, quarentena de dispositivo |
 
-## Anti-abuse (§ANTI-POISONING)
+## Anti-poisoning (resumo; detalhes no ADR 0006)
 
-| Defesa | Onde | Como |
-|---|---|---|
-| Denúncia isolada não decide | `reputation.ts` | Mínimo de 2 denunciantes distintos; abaixo disso score = 0 |
-| Bot reporting | `reputation.ts` | Burst filter: >3 denúncias/hora do mesmo reporter = peso 0 |
-| Falsos positivos | `reputation.ts` | `LEGITIMATE`/contestações subtraem até 45 pontos |
-| Replay | `antibuse.ts` | Timestamp futuro (>5min) ou >7 dias rejeitados |
-| Duplicidade | `antibuse.ts` + store | Dedup por `numberHash+reporterHash+minuto` |
-| Sybil / contas descartáveis | `antibuse.ts` | Peso do reporter: 0,25 (novo) → 1,5 (fiel); contestado cai; quarentenado = 0 |
-| Targeted harassment | `antibuse.ts` | Outlier detection: reporter solitário recorrente tem peso ×0,5 |
-| Payload abuse | `server.ts` | Limite de 16 KB, validação estrita de campos (422) |
-
-## Reputação (§REPUTATION)
-
-Score 0–100 com thresholds configuráveis (`DEFAULT_THRESHOLDS`):
-`CLEAN <20 | LOW_RISK <40 | SUSPICIOUS <60 | SPAM <80 | HIGH_RISK ≥80`.
-
-Componentes: volume ponderado (saturação logarítmica, máx 60) +
-credibilidade por denunciantes distintos (máx 12) + rajada recente 48h (máx 20)
-− contestações (máx 45). Peso temporal com half-life de 14 dias.
-
-## Datasets assinados (§DISTRIBUIÇÃO)
-
-`datasets.ts`: manifest assinado **Ed25519** (@noble/curves). O app verifica:
-1. assinatura sobre o cânon JSON; 2. SHA-256 de cada arquivo; 3. anti-rollback
-de versão. `generateKeyPair()` só para bootstrap/testes — em produção, chave
-em KMS/HSM e pública pinada no app.
-
-## Banco (produção)
-
-`db/schema.sql` (Postgres): `phone_numbers`, `reports` (particionado por mês),
-`user_reputations`, `campaigns`, `moderation_decisions`, `dataset_versions` +
-materialized view `reputation_mv` (leitura O(1), refresh periódico).
-Índices: `(number_hash, reported_at DESC)`, `(reporter_hash, ...)`, `(category, ...)`.
+- Uma denúncia nunca publica: exige Σw ≥ 3, 48 h de idade, score ≥ 60, ≥ 50 % de peso de
+  dispositivos com ≥ 7 dias e ≥ 3 redes distintas.
+- Peso por rede (/24 IPv4, /32 IPv6) limitado a 1: muitos dispositivos numa rede valem como um.
+- Contestações de dispositivos com < 30 dias só somam até o peso das contestações mais antigas;
+  suspensão por contestação pendente exige peso ≥ 0,5 de dispositivos com ≥ 7 dias, ao menos um
+  com ≥ 30 dias, fora de quarentena.
+- Dispositivo acima do p99 diário da frota perde o peso no dia; quarentena manual zera o peso.
+- Rate limit por dispositivo, por rede (/24, /48) e por falhas de autenticação.
+- Contestação aceita protege o número por 90 dias; recálculo por tempo roda de hora em hora.
 
 ## Não exposto (por design)
 
-- Denúncias individuais por número (só agregados) — anti-assédio/doxxing.
-- Qualquer associação de número a pessoa/nome — não coletamos.
-- Comment sem moderação (campo reservado; publicação só após `moderation_decisions`).
+- Denúncias individuais, autores, contagens brutas por número ou comentários (só a moderação lê).
+- Comentários são apagados após 90 dias; partições de denúncias após 14 meses.

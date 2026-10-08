@@ -1,18 +1,15 @@
-# AntiSpam BR — Community API (M8)
-# Build:  docker build -t antispam-api services/api
-# Run:    docker run -p 8787:8787 antispam-api
-FROM node:22-alpine AS deps
+# AntiSpam BR — Community API. Contexto = raiz do monorepo (usa packages/* compartilhados).
+# docker build -f services/api/Dockerfile -t antispam-api .
+FROM node:22-alpine
 WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci --no-audit --no-fund || npm install --no-audit --no-fund
-
-FROM node:22-alpine AS runner
-WORKDIR /app
+COPY package.json package-lock.json ./
+COPY packages ./packages
+COPY services/api ./services/api
+RUN npm ci --omit=dev --no-audit --no-fund --workspace @antispam-br/api \
+ && rm -rf packages/*/test services/api/test
+COPY apps/web ./apps/web
 RUN addgroup -S antispam && adduser -S app -G antispam
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-# Portal atado (../apps/web deve ser montado ou copiado no compose)
-ENV NODE_ENV=production PORT=8787
+ENV NODE_ENV=production PORT=8787 WEB_DIR=/app/apps/web
 USER app
 EXPOSE 8787
-CMD ["npx", "tsx", "src/server-entry.ts"]
+CMD ["node", "services/api/src/main.ts"]

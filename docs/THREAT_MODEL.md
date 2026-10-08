@@ -35,17 +35,17 @@ Método: STRIDE por ativo + abuso específico de comunidades. Revisado em 2026-1
 | T6 | Falso positivo por heurística | BLOCK exige evidência forte; heurística ≤ SILENCE; emergência/1XX nunca bloqueados; contatos não chegam à triagem | ✅ M1 (vetores) |
 | T7 | Falha/lentidão do app durante a chamada | Fail-open ALLOW; orçamento 1,5 s + cão de guarda em 1,8 s (prazo do sistema 5 s); decisão em thread própria; snapshot em memória | ✅ M1 |
 | T7b | Emergência formatada de outro jeito (`+190`, `0190`, `+55 190`) escapando da proteção | Detecção de emergência antes de qualquer outra normalização; vetores com regra `.*` e prefixos | ✅ M1 |
-| T8 | Sybil / mass reporting | Peso por denunciante, Σw mínimo, idade mínima de 48 h, PoW no registro de token, rate limit por /24 e /48 | 🔜 M2 (parcial no snapshot da API) |
-| T9 | Assédio direcionado (marcar pessoa) | Uma denúncia nunca publica; quarentena de surto; contestação LEGITIMATE suspende publicação; linguagem "denunciado como" | 🔜 M2 |
-| T10 | Spammer limpando o próprio número | Contestações também ponderadas; contestação só remove após moderação; contestação de token novo pesa pouco | 🔜 M2 |
-| T11 | Replay de denúncias | nonce único + janela de ±10 min | 🔜 M2 |
+| T8 | Sybil / mass reporting | Peso por denunciante, Σw ≥ 3, idade mínima de 48 h, teto de peso por rede (/24, /32 v6), ≥ 3 redes e ≥ 50 % de peso maduro para publicar, PoW de uso único no registro, rate limit por dispositivo e rede, outlier p99 | ✅ M2 (vetores + testes de API) |
+| T9 | Assédio direcionado (marcar pessoa) | Uma denúncia nunca publica; quarentena de surto; contestação madura suspende publicação; resposta pública neutra até publicar; sem denúncias individuais nem autores na API | ✅ M2 |
+| T10 | Spammer limpando o próprio número | Contestações ponderadas e com teto por rede; contestação de dispositivo < 30 dias só soma até o peso das antigas; suspensão exige contestante ≥ 30 dias; fila ordenada por peso | ✅ M2 · risco residual: tokens envelhecidos ≥ 30 dias |
+| T11 | Replay de denúncias | nonce único por dispositivo + janela de ±10 min; desafio PoW de uso único | ✅ M2 |
 | T12 | Spoofing de número legítimo (golpe usando número de banco) | Flag `VERIFIED_ORG` limita ação a WARN; STIR/SHAKEN falho soma pontos; Origem Verificada (Anatel) como sinal | ✅ engine · 🔜 curadoria de orgs |
 | T13 | Desanonimização por hash de telefone | Admitido: hash não protege número (10¹¹ combinações). Datasets só com números que passam a política; consultas por hash-prefix (k-anonimato) | ✅ ADR 0004 |
-| T14 | Servidor aprende quem recebeu ligação de quem | App não consulta servidor durante chamada; consulta opcional por prefixo de 5 hex; sem log de IP+prefixo | ✅ M1 (sem consulta) · 🔜 M2 |
+| T14 | Servidor aprende quem recebeu ligação de quem | App não consulta servidor durante chamada; consulta opcional por prefixo de 5 hex; sem log de IP+prefixo | ✅ M1 (sem consulta) · ✅ M2 (hash-prefix sem log de IP) |
 | T15 | Vazamento de dados locais por backup | `allowBackup=false`, `dataExtractionRules` excluem tudo, dados em `noBackupFilesDir` | ✅ M1 |
 | T16 | ReDoS em regra regex do usuário | Padrão ≤ 128 caracteres, entradas ≤ ~20 caracteres, regex inválida recusada | ✅ M1 |
-| T17 | SQL injection / mass assignment na API | Queries parametrizadas, validação estrita de schema, payload ≤ 16 kB | 🔜 M2 (migrar para Postgres com testes de segurança) |
-| T18 | Abuso da API como oráculo (enumerar reputação) | Respostas só por bucket de prefixo; rate limit; dataset público já entrega o mesmo dado | 🔜 M2 |
+| T17 | SQL injection / mass assignment na API | Queries parametrizadas, validação estrita de campos, payload ≤ 16 kB, CSP sem inline no portal | ✅ M2 |
+| T18 | Abuso da API como oráculo (enumerar reputação) | Hash-prefix só devolve números publicados; consulta direta é neutra até publicar; rate limit por rede; refs de denúncia HMAC não enumeráveis | ✅ M2 |
 | T19 | Dependência maliciosa / licença incompatível | License scan, SBOM, dependency review no CI; deps mínimas (BouncyCastle, kotlinx) | ✅ CI |
 
 ## 4. Riscos residuais aceitos

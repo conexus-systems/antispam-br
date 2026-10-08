@@ -1,0 +1,10 @@
+**/node_modules
+.git
+apps/android
+apps/ios
+apps/legacy-expo
+docs
+data/sms-corpus
+**/*.jks
+**/*.keystore
+**/.env*

@@ -28,6 +28,21 @@ Score 0–100 calculado no servidor (`packages/reputation`), determinístico e e
 10. **Labels**: 0–19 CLEAN · 20–39 LOW_RISK · 40–59 SUSPICIOUS · 60–79 SPAM · 80–100 HIGH_RISK
     (configuráveis em `data/rules/categories.json`).
 
+## Adendo (M2, implementação com Postgres)
+
+Revisões adversariais do M2 adicionaram:
+
+11. **Teto por rede**: o peso somado de uma rede (HMAC de /24 IPv4 ou /32 IPv6) é limitado a 1,
+    separadamente para denúncias e contestações.
+12. **Publicação** exige, além de Σw ≥ 3, idade ≥ 48 h e score ≥ 60: ≥ 50 % do peso vindo de
+    dispositivos com ≥ 7 dias (`YOUNG_REPORTERS`) e ≥ 3 redes distintas (`FEW_NETWORKS`).
+13. **Contestações novas** (dispositivo com < 30 dias) só somam até o peso das contestações de
+    dispositivos com ≥ 30 dias — contas descartáveis não limpam número sozinhas.
+14. **Suspensão por contestação pendente** exige peso ≥ 0,5 (com teto por rede) de dispositivos
+    com ≥ 7 dias, fora de quarentena, e ao menos um contestante com ≥ 30 dias.
+15. **Moderação**: ACCEPT protege o número por 90 dias e credita os contestantes maduros; REJECT
+    penaliza contestantes. Só opiniões posteriores à decisão anterior contam.
+
 ## Consequências
 
 - Uma única denúncia nunca causa bloqueio global (testado).

@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   packages:
-    name: Pacotes TS (normalizador, datasets)
+    name: Pacotes TS (normalizador, datasets, reputação)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -69,21 +69,32 @@ jobs:
           find apps/ios -name '*.swift' -print0 | xargs -0 -r swiftc -parse
 
   backend:
-    name: API comunitária
+    name: API comunitária (Postgres)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: services/api
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: antispam
+          POSTGRES_PASSWORD: antispam-ci-only
+          POSTGRES_DB: antispam
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U antispam -d antispam"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://antispam:antispam-ci-only@localhost:5432/antispam
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: services/api/package-lock.json
       - run: npm ci --no-audit --no-fund
-      - run: npx tsc --noEmit
-      - run: npm test
+      - run: npm run typecheck -w @antispam-br/api
+      - run: npm run test:api
+      - name: Imagem Docker
+        run: docker build -f services/api/Dockerfile -t antispam-api:ci .
 
   legacy-expo:
     name: Protótipo Expo (congelado)
@@ -151,20 +162,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - run: npm ci --no-audit --no-fund
       - name: Licenças (bloqueia GPL/AGPL/LGPL em dependências de produção)
-        run: |
-          set -e
-          for dir in services/api; do
-            (cd "$dir" && npm ci --no-audit --no-fund >/dev/null && npx --yes license-checker --production --json > /tmp/lic.json)
-            node -e "
-              const l = require('/tmp/lic.json');
-              const bad = Object.entries(l).filter(([, v]) => /GPL/i.test(String(v.licenses || '')));
-              if (bad.length) { bad.forEach(([p, v]) => console.error('$dir', p, v.licenses)); process.exit(1); }
-              console.log('OK licenças: $dir');
-            "
-          done
+        run: node scripts/check-licenses.ts @antispam-br/api
       - name: npm audit (produção, high+)
-        run: cd services/api && npm audit --omit=dev --audit-level=high
+        run: npm audit --omit=dev --workspace @antispam-br/api --audit-level=high
 
   sbom:
     name: SBOM
@@ -175,8 +177,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: cd services/api && npm ci --no-audit --no-fund
-      - run: cd services/api && npx --yes @cyclonedx/cyclonedx-npm --omit dev --output-file ../../sbom-api.json
+      - run: npm ci --no-audit --no-fund
+      - run: npx --yes @cyclonedx/cyclonedx-npm --workspace @antispam-br/api --omit dev --output-file sbom-api.json
       - uses: actions/upload-artifact@v4
         with:
           name: sbom

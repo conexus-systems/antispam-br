@@ -16,7 +16,7 @@
 |---|---|
 | M0 — pesquisa, ADRs, arquitetura, threat model | ✅ |
 | M1 — Android nativo offline | 🟡 núcleo pronto e validado em emulador (78 testes JVM + 3 instrumentados) |
-| M2 — comunidade + API PostgreSQL | 🔜 |
+| M2 — comunidade + API PostgreSQL | ✅ API (envio pelo Android pendente) |
 | M6 — iOS | 🔜 |
 
 Detalhes em [docs/ROADMAP.md](docs/ROADMAP.md).
@@ -28,8 +28,8 @@ apps/android/      app nativo (Kotlin, Compose, CallScreeningService) + :engine 
 apps/ios/          extensões iOS (Message Filter hoje; Call Directory em M6)
 apps/web/          portal comunitário
 apps/legacy-expo/  protótipo React Native anterior — congelado (ADR 0001)
-packages/          phone-normalizer, datasets (formato binário assinado) — TypeScript
-services/api/      API comunitária
+packages/          phone-normalizer, datasets (formato binário assinado), reputation — TypeScript
+services/api/      API comunitária (PostgreSQL) — ver services/api/README.md
 data/              regras BR, schemas, vetores de teste normativos, corpus SMS anonimizado
 docs/              ARCHITECTURE, THREAT_MODEL, ROADMAP, adr/, specs/, research/
 agents/            papéis da equipe de agentes (ROLE / TASKS / DECISIONS)
@@ -42,6 +42,10 @@ Requisitos: JDK 17, Android SDK (API 36), Node ≥ 22.18.
 ```bash
 # pacotes TS e vetores compartilhados
 npm ci && npm test && npm run typecheck
+
+# API comunitária + portal (Postgres em 127.0.0.1:5544, API em http://127.0.0.1:17887)
+docker compose -f infra/docker/docker-compose.yml up -d --build
+TEST_DATABASE_URL=postgres://antispam:antispam-dev-only@127.0.0.1:5544/antispam npm run test:api
 
 # Android
 cd apps/android

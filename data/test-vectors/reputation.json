@@ -1,0 +1,1485 @@
+{
+  "description": "Vetores normativos de reputação comunitária (ADR 0006 + PUBLICATION_POLICY). Horários relativos a 'now'.",
+  "version": 1,
+  "now": "2026-10-08T12:00:00Z",
+  "profiles": {
+    "new": {
+      "age_days": 1,
+      "agreements": 0,
+      "disagreements": 0,
+      "quarantined": false
+    },
+    "mature": {
+      "age_days": 120,
+      "agreements": 0,
+      "disagreements": 0,
+      "quarantined": false
+    },
+    "trusted": {
+      "age_days": 200,
+      "agreements": 20,
+      "disagreements": 0,
+      "quarantined": false
+    },
+    "liar": {
+      "age_days": 200,
+      "agreements": 0,
+      "disagreements": 10,
+      "quarantined": false
+    },
+    "quarantined": {
+      "age_days": 200,
+      "agreements": 5,
+      "disagreements": 0,
+      "quarantined": true
+    },
+    "week": {
+      "age_days": 8,
+      "agreements": 0,
+      "disagreements": 0,
+      "quarantined": false
+    }
+  },
+  "reporter_weights": [
+    {
+      "profile": "new",
+      "weight": 0.307
+    },
+    {
+      "profile": "mature",
+      "weight": 0.7
+    },
+    {
+      "profile": "trusted",
+      "weight": 0.973
+    },
+    {
+      "profile": "liar",
+      "weight": 0.117
+    },
+    {
+      "profile": "quarantined",
+      "weight": 0
+    }
+  ],
+  "cases": [
+    {
+      "name": "uma denúncia nunca pesa sozinha",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.0,
+          "profile": "mature"
+        }
+      ],
+      "expect": {
+        "score": 0,
+        "label": "CLEAN",
+        "insufficient": true,
+        "publishable": false,
+        "blocked_by_includes": [
+          "FEW_REPORTERS"
+        ]
+      }
+    },
+    {
+      "name": "cinco denunciantes maduros, golpe de banco, há 3 dias: publica",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m1",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.5,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m2",
+          "category": "BANK_SCAM",
+          "hours_ago": 75.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m3",
+          "category": "BANK_SCAM",
+          "hours_ago": 77.5,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m4",
+          "category": "BANK_SCAM",
+          "hours_ago": 80.0,
+          "profile": "mature"
+        }
+      ],
+      "expect": {
+        "label": "SPAM",
+        "category": "BANK_SCAM",
+        "publishable": true,
+        "score_min": 60,
+        "score_max": 79
+      }
+    },
+    {
+      "name": "mesmas denúncias nas últimas 10 h: score alto, mas ainda não publica",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "BANK_SCAM",
+          "hours_ago": 2.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m1",
+          "category": "BANK_SCAM",
+          "hours_ago": 4.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m2",
+          "category": "BANK_SCAM",
+          "hours_ago": 6.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m3",
+          "category": "BANK_SCAM",
+          "hours_ago": 8.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m4",
+          "category": "BANK_SCAM",
+          "hours_ago": 10.0,
+          "profile": "mature"
+        }
+      ],
+      "expect": {
+        "label": "SPAM",
+        "publishable": false,
+        "blocked_by_includes": [
+          "TOO_RECENT"
+        ]
+      }
+    },
+    {
+      "name": "surto de 12 dispositivos novos em 40 min: quarentena",
+      "reports": [
+        {
+          "reporter": "n0",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.0,
+          "profile": "new"
+        },
+        {
+          "reporter": "n1",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.06,
+          "profile": "new"
+        },
+        {
+          "reporter": "n2",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.12,
+          "profile": "new"
+        },
+        {
+          "reporter": "n3",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.18,
+          "profile": "new"
+        },
+        {
+          "reporter": "n4",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.24,
+          "profile": "new"
+        },
+        {
+          "reporter": "n5",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.3,
+          "profile": "new"
+        },
+        {
+          "reporter": "n6",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.36,
+          "profile": "new"
+        },
+        {
+          "reporter": "n7",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.42,
+          "profile": "new"
+        },
+        {
+          "reporter": "n8",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.48,
+          "profile": "new"
+        },
+        {
+          "reporter": "n9",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.54,
+          "profile": "new"
+        },
+        {
+          "reporter": "n10",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.6,
+          "profile": "new"
+        },
+        {
+          "reporter": "n11",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.66,
+          "profile": "new"
+        }
+      ],
+      "expect": {
+        "burst": true,
+        "publishable": false,
+        "blocked_by_includes": [
+          "BURST_QUARANTINE"
+        ]
+      }
+    },
+    {
+      "name": "contestações legítimas derrubam o score",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m1",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.5,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m2",
+          "category": "BANK_SCAM",
+          "hours_ago": 75.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m3",
+          "category": "BANK_SCAM",
+          "hours_ago": 77.5,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m4",
+          "category": "BANK_SCAM",
+          "hours_ago": 80.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "c0",
+          "category": "LEGITIMATE",
+          "hours_ago": 20.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "c1",
+          "category": "LEGITIMATE",
+          "hours_ago": 22.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "c2",
+          "category": "LEGITIMATE",
+          "hours_ago": 24.0,
+          "profile": "mature"
+        }
+      ],
+      "expect": {
+        "disputed": true,
+        "publishable": false,
+        "score_max": 39
+      }
+    },
+    {
+      "name": "contestação aceita pela moderação zera",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m1",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.5,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m2",
+          "category": "BANK_SCAM",
+          "hours_ago": 75.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m3",
+          "category": "BANK_SCAM",
+          "hours_ago": 77.5,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m4",
+          "category": "BANK_SCAM",
+          "hours_ago": 80.0,
+          "profile": "mature"
+        }
+      ],
+      "context": {
+        "contest_accepted": true
+      },
+      "expect": {
+        "score": 0,
+        "label": "CLEAN",
+        "publishable": false,
+        "blocked_by_includes": [
+          "CONTEST_ACCEPTED"
+        ]
+      }
+    },
+    {
+      "name": "denúncias de 4 meses atrás decaem até neutro",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "BANK_SCAM",
+          "hours_ago": 2880.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m1",
+          "category": "BANK_SCAM",
+          "hours_ago": 2882.5,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m2",
+          "category": "BANK_SCAM",
+          "hours_ago": 2885.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m3",
+          "category": "BANK_SCAM",
+          "hours_ago": 2887.5,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m4",
+          "category": "BANK_SCAM",
+          "hours_ago": 2890.0,
+          "profile": "mature"
+        }
+      ],
+      "expect": {
+        "score": 0,
+        "insufficient": true,
+        "publishable": false
+      }
+    },
+    {
+      "name": "telemarketing insistente vira SPAM com mais denunciantes",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "TELEMARKETING",
+          "hours_ago": 90.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m1",
+          "category": "TELEMARKETING",
+          "hours_ago": 91.429,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m2",
+          "category": "TELEMARKETING",
+          "hours_ago": 92.857,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m3",
+          "category": "TELEMARKETING",
+          "hours_ago": 94.286,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m4",
+          "category": "TELEMARKETING",
+          "hours_ago": 95.714,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m5",
+          "category": "TELEMARKETING",
+          "hours_ago": 97.143,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m6",
+          "category": "TELEMARKETING",
+          "hours_ago": 98.571,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m7",
+          "category": "TELEMARKETING",
+          "hours_ago": 100.0,
+          "profile": "mature"
+        }
+      ],
+      "expect": {
+        "label": "SPAM",
+        "category": "TELEMARKETING",
+        "publishable": true
+      }
+    },
+    {
+      "name": "pesquisa tem gravidade baixa",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "SURVEY",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m1",
+          "category": "SURVEY",
+          "hours_ago": 73.333,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m2",
+          "category": "SURVEY",
+          "hours_ago": 76.667,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m3",
+          "category": "SURVEY",
+          "hours_ago": 80.0,
+          "profile": "mature"
+        }
+      ],
+      "expect": {
+        "publishable": false,
+        "score_max": 39
+      }
+    },
+    {
+      "name": "mesmo denunciante repetindo conta uma vez",
+      "reports": [
+        {
+          "reporter": "x0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "x0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "x0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "x0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "x0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "x0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "x0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "x0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "x0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "x0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        }
+      ],
+      "expect": {
+        "distinct": 1,
+        "insufficient": true,
+        "score": 0
+      }
+    },
+    {
+      "name": "contas com histórico de denúncias derrubadas quase não pesam",
+      "reports": [
+        {
+          "reporter": "l0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "liar"
+        },
+        {
+          "reporter": "l1",
+          "category": "BANK_SCAM",
+          "hours_ago": 71.111,
+          "profile": "liar"
+        },
+        {
+          "reporter": "l2",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.222,
+          "profile": "liar"
+        },
+        {
+          "reporter": "l3",
+          "category": "BANK_SCAM",
+          "hours_ago": 73.333,
+          "profile": "liar"
+        },
+        {
+          "reporter": "l4",
+          "category": "BANK_SCAM",
+          "hours_ago": 74.444,
+          "profile": "liar"
+        },
+        {
+          "reporter": "l5",
+          "category": "BANK_SCAM",
+          "hours_ago": 75.556,
+          "profile": "liar"
+        },
+        {
+          "reporter": "l6",
+          "category": "BANK_SCAM",
+          "hours_ago": 76.667,
+          "profile": "liar"
+        },
+        {
+          "reporter": "l7",
+          "category": "BANK_SCAM",
+          "hours_ago": 77.778,
+          "profile": "liar"
+        },
+        {
+          "reporter": "l8",
+          "category": "BANK_SCAM",
+          "hours_ago": 78.889,
+          "profile": "liar"
+        },
+        {
+          "reporter": "l9",
+          "category": "BANK_SCAM",
+          "hours_ago": 80.0,
+          "profile": "liar"
+        }
+      ],
+      "expect": {
+        "insufficient": true,
+        "score": 0,
+        "publishable": false
+      }
+    },
+    {
+      "name": "utilidade pública nunca é publicada",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m1",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.5,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m2",
+          "category": "BANK_SCAM",
+          "hours_ago": 75.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m3",
+          "category": "BANK_SCAM",
+          "hours_ago": 77.5,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m4",
+          "category": "BANK_SCAM",
+          "hours_ago": 80.0,
+          "profile": "mature"
+        }
+      ],
+      "context": {
+        "never_block": true
+      },
+      "expect": {
+        "publishable": false,
+        "blocked_by_includes": [
+          "NEVER_BLOCK"
+        ],
+        "score_min": 60
+      }
+    },
+    {
+      "name": "denunciante que muda de ideia conta só a última opinião",
+      "reports": [
+        {
+          "reporter": "z",
+          "category": "BANK_SCAM",
+          "hours_ago": 80,
+          "profile": "mature"
+        },
+        {
+          "reporter": "z",
+          "category": "LEGITIMATE",
+          "hours_ago": 10,
+          "profile": "mature"
+        }
+      ],
+      "expect": {
+        "distinct": 0,
+        "score": 0
+      }
+    },
+    {
+      "name": "dez denunciantes confiáveis: alto risco",
+      "reports": [
+        {
+          "reporter": "t0",
+          "category": "PIX_SCAM",
+          "hours_ago": 70.0,
+          "profile": "trusted"
+        },
+        {
+          "reporter": "t1",
+          "category": "PIX_SCAM",
+          "hours_ago": 71.111,
+          "profile": "trusted"
+        },
+        {
+          "reporter": "t2",
+          "category": "PIX_SCAM",
+          "hours_ago": 72.222,
+          "profile": "trusted"
+        },
+        {
+          "reporter": "t3",
+          "category": "PIX_SCAM",
+          "hours_ago": 73.333,
+          "profile": "trusted"
+        },
+        {
+          "reporter": "t4",
+          "category": "PIX_SCAM",
+          "hours_ago": 74.444,
+          "profile": "trusted"
+        },
+        {
+          "reporter": "t5",
+          "category": "PIX_SCAM",
+          "hours_ago": 75.556,
+          "profile": "trusted"
+        },
+        {
+          "reporter": "t6",
+          "category": "PIX_SCAM",
+          "hours_ago": 76.667,
+          "profile": "trusted"
+        },
+        {
+          "reporter": "t7",
+          "category": "PIX_SCAM",
+          "hours_ago": 77.778,
+          "profile": "trusted"
+        },
+        {
+          "reporter": "t8",
+          "category": "PIX_SCAM",
+          "hours_ago": 78.889,
+          "profile": "trusted"
+        },
+        {
+          "reporter": "t9",
+          "category": "PIX_SCAM",
+          "hours_ago": 80.0,
+          "profile": "trusted"
+        }
+      ],
+      "expect": {
+        "label": "HIGH_RISK",
+        "category": "PIX_SCAM",
+        "publishable": true
+      }
+    },
+    {
+      "name": "contestação pendente suspende publicação",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m1",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.5,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m2",
+          "category": "BANK_SCAM",
+          "hours_ago": 75.0,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m3",
+          "category": "BANK_SCAM",
+          "hours_ago": 77.5,
+          "profile": "mature"
+        },
+        {
+          "reporter": "m4",
+          "category": "BANK_SCAM",
+          "hours_ago": 80.0,
+          "profile": "mature"
+        }
+      ],
+      "context": {
+        "pending_contest": true
+      },
+      "expect": {
+        "publishable": false,
+        "disputed": true,
+        "blocked_by_includes": [
+          "PENDING_CONTEST"
+        ]
+      }
+    },
+    {
+      "name": "Sybil: 13 dispositivos novos na mesma rede, espaçados 20 min, há 50 h",
+      "reports": [
+        {
+          "reporter": "s0",
+          "category": "BANK_SCAM",
+          "hours_ago": 50.0,
+          "profile": "new",
+          "network": "s-net"
+        },
+        {
+          "reporter": "s1",
+          "category": "BANK_SCAM",
+          "hours_ago": 50.333,
+          "profile": "new",
+          "network": "s-net"
+        },
+        {
+          "reporter": "s2",
+          "category": "BANK_SCAM",
+          "hours_ago": 50.667,
+          "profile": "new",
+          "network": "s-net"
+        },
+        {
+          "reporter": "s3",
+          "category": "BANK_SCAM",
+          "hours_ago": 51.0,
+          "profile": "new",
+          "network": "s-net"
+        },
+        {
+          "reporter": "s4",
+          "category": "BANK_SCAM",
+          "hours_ago": 51.333,
+          "profile": "new",
+          "network": "s-net"
+        },
+        {
+          "reporter": "s5",
+          "category": "BANK_SCAM",
+          "hours_ago": 51.667,
+          "profile": "new",
+          "network": "s-net"
+        },
+        {
+          "reporter": "s6",
+          "category": "BANK_SCAM",
+          "hours_ago": 52.0,
+          "profile": "new",
+          "network": "s-net"
+        },
+        {
+          "reporter": "s7",
+          "category": "BANK_SCAM",
+          "hours_ago": 52.333,
+          "profile": "new",
+          "network": "s-net"
+        },
+        {
+          "reporter": "s8",
+          "category": "BANK_SCAM",
+          "hours_ago": 52.667,
+          "profile": "new",
+          "network": "s-net"
+        },
+        {
+          "reporter": "s9",
+          "category": "BANK_SCAM",
+          "hours_ago": 53.0,
+          "profile": "new",
+          "network": "s-net"
+        },
+        {
+          "reporter": "s10",
+          "category": "BANK_SCAM",
+          "hours_ago": 53.333,
+          "profile": "new",
+          "network": "s-net"
+        },
+        {
+          "reporter": "s11",
+          "category": "BANK_SCAM",
+          "hours_ago": 53.667,
+          "profile": "new",
+          "network": "s-net"
+        },
+        {
+          "reporter": "s12",
+          "category": "BANK_SCAM",
+          "hours_ago": 54.0,
+          "profile": "new",
+          "network": "s-net"
+        }
+      ],
+      "expect": {
+        "insufficient": true,
+        "score": 0,
+        "publishable": false
+      }
+    },
+    {
+      "name": "Sybil espalhado: 13 dispositivos novos em 13 redes, espaçados",
+      "reports": [
+        {
+          "reporter": "s0",
+          "category": "BANK_SCAM",
+          "hours_ago": 50.0,
+          "profile": "new",
+          "network": "s-net0"
+        },
+        {
+          "reporter": "s1",
+          "category": "BANK_SCAM",
+          "hours_ago": 50.333,
+          "profile": "new",
+          "network": "s-net1"
+        },
+        {
+          "reporter": "s2",
+          "category": "BANK_SCAM",
+          "hours_ago": 50.667,
+          "profile": "new",
+          "network": "s-net2"
+        },
+        {
+          "reporter": "s3",
+          "category": "BANK_SCAM",
+          "hours_ago": 51.0,
+          "profile": "new",
+          "network": "s-net3"
+        },
+        {
+          "reporter": "s4",
+          "category": "BANK_SCAM",
+          "hours_ago": 51.333,
+          "profile": "new",
+          "network": "s-net4"
+        },
+        {
+          "reporter": "s5",
+          "category": "BANK_SCAM",
+          "hours_ago": 51.667,
+          "profile": "new",
+          "network": "s-net5"
+        },
+        {
+          "reporter": "s6",
+          "category": "BANK_SCAM",
+          "hours_ago": 52.0,
+          "profile": "new",
+          "network": "s-net6"
+        },
+        {
+          "reporter": "s7",
+          "category": "BANK_SCAM",
+          "hours_ago": 52.333,
+          "profile": "new",
+          "network": "s-net7"
+        },
+        {
+          "reporter": "s8",
+          "category": "BANK_SCAM",
+          "hours_ago": 52.667,
+          "profile": "new",
+          "network": "s-net8"
+        },
+        {
+          "reporter": "s9",
+          "category": "BANK_SCAM",
+          "hours_ago": 53.0,
+          "profile": "new",
+          "network": "s-net9"
+        },
+        {
+          "reporter": "s10",
+          "category": "BANK_SCAM",
+          "hours_ago": 53.333,
+          "profile": "new",
+          "network": "s-net10"
+        },
+        {
+          "reporter": "s11",
+          "category": "BANK_SCAM",
+          "hours_ago": 53.667,
+          "profile": "new",
+          "network": "s-net11"
+        },
+        {
+          "reporter": "s12",
+          "category": "BANK_SCAM",
+          "hours_ago": 54.0,
+          "profile": "new",
+          "network": "s-net12"
+        }
+      ],
+      "expect": {
+        "publishable": false,
+        "blocked_by_includes": [
+          "YOUNG_REPORTERS"
+        ]
+      }
+    },
+    {
+      "name": "cinco maduros na mesma rede valem como um",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature",
+          "network": "m-net"
+        },
+        {
+          "reporter": "m1",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.5,
+          "profile": "mature",
+          "network": "m-net"
+        },
+        {
+          "reporter": "m2",
+          "category": "BANK_SCAM",
+          "hours_ago": 75.0,
+          "profile": "mature",
+          "network": "m-net"
+        },
+        {
+          "reporter": "m3",
+          "category": "BANK_SCAM",
+          "hours_ago": 77.5,
+          "profile": "mature",
+          "network": "m-net"
+        },
+        {
+          "reporter": "m4",
+          "category": "BANK_SCAM",
+          "hours_ago": 80.0,
+          "profile": "mature",
+          "network": "m-net"
+        }
+      ],
+      "expect": {
+        "insufficient": true,
+        "score": 0,
+        "publishable": false,
+        "blocked_by_includes": [
+          "FEW_NETWORKS"
+        ]
+      }
+    },
+    {
+      "name": "três maduros em redes distintas + seis novos: publica",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "PIX_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature",
+          "network": "m-net0"
+        },
+        {
+          "reporter": "m1",
+          "category": "PIX_SCAM",
+          "hours_ago": 75.0,
+          "profile": "mature",
+          "network": "m-net1"
+        },
+        {
+          "reporter": "m2",
+          "category": "PIX_SCAM",
+          "hours_ago": 80.0,
+          "profile": "mature",
+          "network": "m-net2"
+        },
+        {
+          "reporter": "n0",
+          "category": "PIX_SCAM",
+          "hours_ago": 60.0,
+          "profile": "new",
+          "network": "n-net0"
+        },
+        {
+          "reporter": "n1",
+          "category": "PIX_SCAM",
+          "hours_ago": 62.0,
+          "profile": "new",
+          "network": "n-net1"
+        },
+        {
+          "reporter": "n2",
+          "category": "PIX_SCAM",
+          "hours_ago": 64.0,
+          "profile": "new",
+          "network": "n-net2"
+        },
+        {
+          "reporter": "n3",
+          "category": "PIX_SCAM",
+          "hours_ago": 66.0,
+          "profile": "new",
+          "network": "n-net3"
+        },
+        {
+          "reporter": "n4",
+          "category": "PIX_SCAM",
+          "hours_ago": 68.0,
+          "profile": "new",
+          "network": "n-net4"
+        },
+        {
+          "reporter": "n5",
+          "category": "PIX_SCAM",
+          "hours_ago": 70.0,
+          "profile": "new",
+          "network": "n-net5"
+        }
+      ],
+      "expect": {
+        "label": "SPAM",
+        "publishable": true
+      }
+    },
+    {
+      "name": "contestações de uma rede só têm teto: reduzem, mas não zeram",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature",
+          "network": "m-net0"
+        },
+        {
+          "reporter": "m1",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.5,
+          "profile": "mature",
+          "network": "m-net1"
+        },
+        {
+          "reporter": "m2",
+          "category": "BANK_SCAM",
+          "hours_ago": 75.0,
+          "profile": "mature",
+          "network": "m-net2"
+        },
+        {
+          "reporter": "m3",
+          "category": "BANK_SCAM",
+          "hours_ago": 77.5,
+          "profile": "mature",
+          "network": "m-net3"
+        },
+        {
+          "reporter": "m4",
+          "category": "BANK_SCAM",
+          "hours_ago": 80.0,
+          "profile": "mature",
+          "network": "m-net4"
+        },
+        {
+          "reporter": "c0",
+          "category": "LEGITIMATE",
+          "hours_ago": 20.0,
+          "profile": "mature",
+          "network": "c-net"
+        },
+        {
+          "reporter": "c1",
+          "category": "LEGITIMATE",
+          "hours_ago": 20.8,
+          "profile": "mature",
+          "network": "c-net"
+        },
+        {
+          "reporter": "c2",
+          "category": "LEGITIMATE",
+          "hours_ago": 21.6,
+          "profile": "mature",
+          "network": "c-net"
+        },
+        {
+          "reporter": "c3",
+          "category": "LEGITIMATE",
+          "hours_ago": 22.4,
+          "profile": "mature",
+          "network": "c-net"
+        },
+        {
+          "reporter": "c4",
+          "category": "LEGITIMATE",
+          "hours_ago": 23.2,
+          "profile": "mature",
+          "network": "c-net"
+        },
+        {
+          "reporter": "c5",
+          "category": "LEGITIMATE",
+          "hours_ago": 24.0,
+          "profile": "mature",
+          "network": "c-net"
+        }
+      ],
+      "expect": {
+        "score_min": 40,
+        "score_max": 59
+      }
+    },
+    {
+      "name": "contestações só de dispositivos novos não derrubam número publicado",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature",
+          "network": "m-net0"
+        },
+        {
+          "reporter": "m1",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.0,
+          "profile": "mature",
+          "network": "m-net1"
+        },
+        {
+          "reporter": "m2",
+          "category": "BANK_SCAM",
+          "hours_ago": 74.0,
+          "profile": "mature",
+          "network": "m-net2"
+        },
+        {
+          "reporter": "m3",
+          "category": "BANK_SCAM",
+          "hours_ago": 76.0,
+          "profile": "mature",
+          "network": "m-net3"
+        },
+        {
+          "reporter": "m4",
+          "category": "BANK_SCAM",
+          "hours_ago": 78.0,
+          "profile": "mature",
+          "network": "m-net4"
+        },
+        {
+          "reporter": "m5",
+          "category": "BANK_SCAM",
+          "hours_ago": 80.0,
+          "profile": "mature",
+          "network": "m-net5"
+        },
+        {
+          "reporter": "y0",
+          "category": "LEGITIMATE",
+          "hours_ago": 1.0,
+          "profile": "new",
+          "network": "y-net0"
+        },
+        {
+          "reporter": "y1",
+          "category": "LEGITIMATE",
+          "hours_ago": 2.0,
+          "profile": "new",
+          "network": "y-net1"
+        },
+        {
+          "reporter": "y2",
+          "category": "LEGITIMATE",
+          "hours_ago": 3.0,
+          "profile": "new",
+          "network": "y-net2"
+        },
+        {
+          "reporter": "y3",
+          "category": "LEGITIMATE",
+          "hours_ago": 4.0,
+          "profile": "new",
+          "network": "y-net3"
+        },
+        {
+          "reporter": "y4",
+          "category": "LEGITIMATE",
+          "hours_ago": 5.0,
+          "profile": "new",
+          "network": "y-net4"
+        }
+      ],
+      "expect": {
+        "label": "SPAM",
+        "publishable": true
+      }
+    },
+    {
+      "name": "contestações de contas com uma semana (redes distintas) não derrubam número publicado",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature",
+          "network": "m-net0"
+        },
+        {
+          "reporter": "m1",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.0,
+          "profile": "mature",
+          "network": "m-net1"
+        },
+        {
+          "reporter": "m2",
+          "category": "BANK_SCAM",
+          "hours_ago": 74.0,
+          "profile": "mature",
+          "network": "m-net2"
+        },
+        {
+          "reporter": "m3",
+          "category": "BANK_SCAM",
+          "hours_ago": 76.0,
+          "profile": "mature",
+          "network": "m-net3"
+        },
+        {
+          "reporter": "m4",
+          "category": "BANK_SCAM",
+          "hours_ago": 78.0,
+          "profile": "mature",
+          "network": "m-net4"
+        },
+        {
+          "reporter": "m5",
+          "category": "BANK_SCAM",
+          "hours_ago": 80.0,
+          "profile": "mature",
+          "network": "m-net5"
+        },
+        {
+          "reporter": "w0",
+          "category": "LEGITIMATE",
+          "hours_ago": 1.0,
+          "profile": "week",
+          "network": "w-net0"
+        },
+        {
+          "reporter": "w1",
+          "category": "LEGITIMATE",
+          "hours_ago": 2.0,
+          "profile": "week",
+          "network": "w-net1"
+        },
+        {
+          "reporter": "w2",
+          "category": "LEGITIMATE",
+          "hours_ago": 3.0,
+          "profile": "week",
+          "network": "w-net2"
+        },
+        {
+          "reporter": "w3",
+          "category": "LEGITIMATE",
+          "hours_ago": 4.0,
+          "profile": "week",
+          "network": "w-net3"
+        },
+        {
+          "reporter": "w4",
+          "category": "LEGITIMATE",
+          "hours_ago": 5.0,
+          "profile": "week",
+          "network": "w-net4"
+        }
+      ],
+      "expect": {
+        "label": "SPAM",
+        "publishable": true
+      }
+    },
+    {
+      "name": "contestação madura habilita as novas até o mesmo peso",
+      "reports": [
+        {
+          "reporter": "m0",
+          "category": "BANK_SCAM",
+          "hours_ago": 70.0,
+          "profile": "mature",
+          "network": "m-net0"
+        },
+        {
+          "reporter": "m1",
+          "category": "BANK_SCAM",
+          "hours_ago": 72.0,
+          "profile": "mature",
+          "network": "m-net1"
+        },
+        {
+          "reporter": "m2",
+          "category": "BANK_SCAM",
+          "hours_ago": 74.0,
+          "profile": "mature",
+          "network": "m-net2"
+        },
+        {
+          "reporter": "m3",
+          "category": "BANK_SCAM",
+          "hours_ago": 76.0,
+          "profile": "mature",
+          "network": "m-net3"
+        },
+        {
+          "reporter": "m4",
+          "category": "BANK_SCAM",
+          "hours_ago": 78.0,
+          "profile": "mature",
+          "network": "m-net4"
+        },
+        {
+          "reporter": "m5",
+          "category": "BANK_SCAM",
+          "hours_ago": 80.0,
+          "profile": "mature",
+          "network": "m-net5"
+        },
+        {
+          "reporter": "c0",
+          "category": "LEGITIMATE",
+          "hours_ago": 5.0,
+          "profile": "mature",
+          "network": "c-net0"
+        },
+        {
+          "reporter": "y0",
+          "category": "LEGITIMATE",
+          "hours_ago": 1.0,
+          "profile": "new",
+          "network": "y-net0"
+        },
+        {
+          "reporter": "y1",
+          "category": "LEGITIMATE",
+          "hours_ago": 2.0,
+          "profile": "new",
+          "network": "y-net1"
+        },
+        {
+          "reporter": "y2",
+          "category": "LEGITIMATE",
+          "hours_ago": 3.0,
+          "profile": "new",
+          "network": "y-net2"
+        },
+        {
+          "reporter": "y3",
+          "category": "LEGITIMATE",
+          "hours_ago": 4.0,
+          "profile": "new",
+          "network": "y-net3"
+        },
+        {
+          "reporter": "y4",
+          "category": "LEGITIMATE",
+          "hours_ago": 5.0,
+          "profile": "new",
+          "network": "y-net4"
+        }
+      ],
+      "expect": {
+        "score_max": 59,
+        "publishable": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "description": "Categorias de denúncia, código no dataset binário e gravidade usada no score (ADR 0006). Labels configuráveis.",
+  "version": 1,
+  "labels": [
+    { "label": "CLEAN", "min": 0 },
+    { "label": "LOW_RISK", "min": 20 },
+    { "label": "SUSPICIOUS", "min": 40 },
+    { "label": "SPAM", "min": 60 },
+    { "label": "HIGH_RISK", "min": 80 }
+  ],
+  "categories": [
+    { "id": "OTHER", "code": 0, "severity": 0.7 },
+    { "id": "TELEMARKETING", "code": 1, "severity": 0.8 },
+    { "id": "ROBOCALL", "code": 2, "severity": 0.85 },
+    { "id": "SILENT_CALL", "code": 3, "severity": 0.8 },
+    { "id": "COLLECTION", "code": 4, "severity": 0.75 },
+    { "id": "BANK_SCAM", "code": 5, "severity": 1.0 },
+    { "id": "PIX_SCAM", "code": 6, "severity": 1.0 },
+    { "id": "PHISHING", "code": 7, "severity": 1.0 },
+    { "id": "DELIVERY_SCAM", "code": 8, "severity": 1.0 },
+    { "id": "FAKE_SUPPORT", "code": 9, "severity": 1.0 },
+    { "id": "LOAN", "code": 10, "severity": 0.85 },
+    { "id": "SURVEY", "code": 11, "severity": 0.6 },
+    { "id": "SPOOFING", "code": 12, "severity": 0.95 },
+    { "id": "LEGITIMATE", "code": 13, "severity": 0 }
+  ]
+}
