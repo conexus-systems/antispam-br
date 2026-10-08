@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.AntiSpam" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorAccent">@color/as_accent</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowShowWallpaper">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:alertDialogTheme">@style/AntiSpamDialog</item>
+        <item name="android:windowSplashScreenBackground">@color/as_splash</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/ic_launcher_background</item>
+    </style>
+
+    <style name="AntiSpamDialog" parent="AntiSpamDialogBase">
+        <item name="android:windowBlurBehindEnabled">true</item>
+        <item name="android:windowBlurBehindRadius">16dp</item>
+    </style>
+</resources>

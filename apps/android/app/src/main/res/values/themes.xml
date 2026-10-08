@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.AntiSpam" parent="android:Theme.Material.NoActionBar" />
+    <!-- Mesma linguagem do Conexus Launcher: papel de parede ao fundo (a UI desenha um véu escuro por cima). -->
+    <style name="Theme.AntiSpam" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorAccent">@color/as_accent</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowShowWallpaper">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:alertDialogTheme">@style/AntiSpamDialog</item>
+    </style>
+
+    <!-- Superfície acrílica para diálogos do sistema: 8 dp, translúcida; values-v31 liga o desfoque. -->
+    <style name="AntiSpamDialogBase" parent="android:style/Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/dialog_surface</item>
+        <item name="android:colorAccent">@color/as_accent_light</item>
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:backgroundDimAmount">0.4</item>
+    </style>
+    <style name="AntiSpamDialog" parent="AntiSpamDialogBase" />
 </resources>
