@@ -25,8 +25,10 @@ uv run ~/.cursor/skills/brand-identity/scripts/render_brand.py antispam-br --and
 | Ícone da Play (512) | `apps/android/play/graphics/icon-512.png` |
 | Feature graphic (1024×500, sem alpha) | `apps/android/play/graphics/feature-graphic.png` |
 
-Marca: monograma **AS** em Inter ExtraBold (SIL OFL) branco, centrado num quadrado de cor sólida —
-plano e geométrico como um tile Metro, sem gradiente, escudo ou telefone.
+Marca: monograma **AS** em Inter Medium (SIL OFL) branco, ocupando ~52% da área visível do ícone,
+centrado num quadrado de cor sólida — plano e geométrico como um tile Metro, sem gradiente, escudo ou
+telefone. Segue a família Conexus (`agents/.ai/skills/brand-identity/FAMILY.md`) e é gerado só por
+`render_brand.py antispam-br --android-res`; o ícone legado mantém cantos de 12%.
 
 ### Paleta
 
