@@ -28,8 +28,8 @@ android {
         applicationId = "com.conexus.antispam"
         minSdk = 29
         targetSdk = 36
-        versionCode = (findProperty("antispam.versionCode") as String?)?.toInt() ?: 2
-        versionName = (findProperty("antispam.versionName") as String?) ?: "0.1.1"
+        versionCode = (findProperty("antispam.versionCode") as String?)?.toInt() ?: 3
+        versionName = (findProperty("antispam.versionName") as String?) ?: "0.1.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "DATASET_BASE_URL", "\"https://datasets.antispam-br.org/br-calls/\"")
         buildConfigField("String", "DATASET_KEYS", "\"$releaseKeys\"")
