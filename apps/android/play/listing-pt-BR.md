@@ -1,6 +1,7 @@
 # Ficha da Google Play — pt-BR
 
 Aplicada via MCP `update_listing` (language `pt-BR`) depois que o app existir na Play Console.
+Gráficos (gerados pelo `render_brand.py`, ver `docs/DESIGN.md`): `graphics/icon-512.png` e `graphics/feature-graphic.png`.
 
 ## Título (≤ 30)
 

@@ -72,13 +72,14 @@ A chave de upload e a conta de serviço ficam fora do repositório (`~/secrets/`
 cd apps/android
 ./gradlew :engine:test :app:lintRelease :app:bundleRelease \
   -Pantispam.signingProperties=$HOME/secrets/antispam-br-upload.properties \
-  -Pantispam.versionCode=2 -Pantispam.versionName=0.1.1
+  -Pantispam.versionCode=3 -Pantispam.versionName=0.1.2
 cd ../..
 GOOGLE_PLAY_SERVICE_ACCOUNT=$HOME/secrets/google-play-service-account.json \
   node apps/android/scripts/play-upload.ts --aab apps/android/app/build/outputs/bundle/release/app-release.aab --track internal
 ```
 
-Enquanto o app estiver em rascunho na Console, só releases `draft` são aceitas. Ficha da loja: `apps/android/play/listing-pt-BR.md`.
+Enquanto o app estiver em rascunho na Console, só releases `draft` são aceitas. Ficha da loja: `apps/android/play/listing-pt-BR.md`;
+ícone 512 e feature graphic: `apps/android/play/graphics/`. Visual e identidade: [docs/DESIGN.md](docs/DESIGN.md).
 
 ## Privacidade
 
