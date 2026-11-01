@@ -31,6 +31,18 @@ updates:
           - "clsx"
           - "tailwind*"
 
+  - package-ecosystem: terraform
+    directory: /infra/terraform
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - terraform
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
